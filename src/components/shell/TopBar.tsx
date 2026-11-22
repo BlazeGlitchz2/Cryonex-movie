@@ -1,13 +1,15 @@
-import { Check, ChevronDown, ChevronRight, Pencil, Settings2 } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Pencil, Settings2, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
 import {
+  GUEST_ID,
   PROFILE_HEX,
   profileInitial,
   profileInitialInk,
   useProfileStore,
 } from "../../store/useProfileStore";
+import { useToastStore } from "../../store/useToastStore";
 import { useUIStore } from "../../store/useUIStore";
 import { switchProfile } from "../../services/profileStorage";
 
@@ -50,6 +52,10 @@ export function TopBar() {
   const profiles = useProfileStore((state) => state.profiles);
   const activeProfileId = useProfileStore((state) => state.activeProfileId);
   const setManageOpen = useProfileStore((state) => state.setManageOpen);
+  const ensureGuestProfile = useProfileStore(
+    (state) => state.ensureGuestProfile,
+  );
+  const pushToast = useToastStore((state) => state.pushToast);
   const activeProfile = profiles.find(
     (profile) => profile.id === activeProfileId,
   );
@@ -295,6 +301,20 @@ export function TopBar() {
                   >
                     <Pencil size={15} aria-hidden="true" />
                     Manage profiles
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      ensureGuestProfile();
+                      switchProfile(GUEST_ID);
+                      setProfileMenuOpen(false);
+                      pushToast({ title: "Watching as Guest" });
+                    }}
+                    className="flex min-h-10 w-full items-center gap-2 rounded-ctl px-3 text-sm text-ink-dim transition-colors duration-250 ease-in-out hover:bg-white/[0.05] hover:text-ink"
+                  >
+                    <UserRound size={15} aria-hidden="true" />
+                    Continue as guest
                   </button>
                 </div>
               </>
