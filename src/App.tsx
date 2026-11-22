@@ -78,8 +78,19 @@ function DeepLinkHandler() {
       } catch { /* not a valid link; ignore */ }
     };
     let un: (() => void) | undefined;
-    import("@tauri-apps/plugin-deep-link").then(({ getCurrent }) => void getCurrent().then(route)).catch(() => {});
-    import("@tauri-apps/api/event").then(({ listen }) => void listen("deep-link://new-url", (e) => route((e as { payload?: unknown }).payload)).then((f) => (un = f)));
+    // pure web has no Tauri internals: every bridge call must stay silent there
+    if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
+      import("@tauri-apps/plugin-deep-link")
+        .then(({ getCurrent }) => void getCurrent().then(route))
+        .catch(() => {});
+      import("@tauri-apps/api/event")
+        .then(({ listen }) =>
+          listen("deep-link://new-url", (e) =>
+            route((e as { payload?: unknown }).payload),
+          ).then((f) => (un = f)),
+        )
+        .catch(() => {});
+    }
     return () => un?.();
   }, [navigate]);
   return null;
