@@ -1,3 +1,4 @@
+import { Film } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IMAGE_RETRY_DELAYS } from "../../services/imageRetry";
 import { tmdbImageUrl } from "../../services/tmdb";
@@ -69,6 +70,28 @@ export function TmdbImage({
     [],
   );
 
+  // a failed poster gets another chance when the network or the tab returns
+  useEffect(() => {
+    if (!failed) {
+      return;
+    }
+    const revive = () => {
+      setFailed(false);
+      setAttempt(0);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        revive();
+      }
+    };
+    window.addEventListener("online", revive);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("online", revive);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [failed]);
+
   if (!base) {
     return null;
   }
@@ -77,6 +100,25 @@ export function TmdbImage({
     attempt === 0
       ? base
       : `${base}${base.includes("?") ? "&" : "?"}retry=${attempt}`;
+
+  if (failed) {
+    // honest placeholder instead of an invisible frame: art failed, layout holds
+    return (
+      <div
+        role="img"
+        aria-label={alt}
+        className={`grid place-items-center bg-surface-2 text-ink-dim ${className ?? ""}`}
+        style={{
+          aspectRatio:
+            width !== undefined && height !== undefined
+              ? `${width} / ${height}`
+              : undefined,
+        }}
+      >
+        <Film size={20} aria-hidden="true" />
+      </div>
+    );
+  }
 
   return (
     <img
@@ -97,7 +139,7 @@ export function TmdbImage({
         }
         setFailed(true);
       }}
-      className={`${className ?? ""}${failed ? " opacity-0" : ""}`}
+      className={className}
     />
   );
 }

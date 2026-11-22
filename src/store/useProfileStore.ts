@@ -31,12 +31,15 @@ export function profileInitial(name: string): string {
   return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
 }
 
+export const GUEST_ID = "guest";
+
 interface ProfileState {
   profiles: Profile[];
   activeProfileId: string | null;
   pickerOpen: boolean;
   manageOpen: boolean;
   addProfile: (name: string, color: ProfileColor) => string;
+  ensureGuestProfile: () => void;
   renameProfile: (id: string, name: string) => void;
   setProfileColor: (id: string, color: ProfileColor) => void;
   deleteProfile: (id: string) => void;
@@ -73,6 +76,15 @@ export const useProfileStore = create<ProfileState>()(
     }));
     return id;
   },
+  ensureGuestProfile: () =>
+    set((state) => {
+      if (state.profiles.some((profile) => profile.id === GUEST_ID)) {
+        return {};
+      }
+      return {
+        profiles: [...state.profiles, { id: GUEST_ID, name: "Guest", color: "violet" }],
+      };
+    }),
       renameProfile: (id, name) =>
         set((state) => ({
           profiles: state.profiles.map((profile) =>

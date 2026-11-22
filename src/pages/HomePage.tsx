@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BentoHero } from "../components/home/BentoHero";
 import { ContinueWatchingRow } from "../components/home/ContinueWatchingRow";
@@ -7,6 +8,7 @@ import {
   queryErrorMessage,
   standardQueryOptions,
 } from "../components/shared/MediaRow";
+import { preloadImages } from "../services/imageRetry";
 import {
   fetchMediaDetails,
   fetchPopularMovies,
@@ -14,6 +16,7 @@ import {
   fetchTopRatedMovies,
   fetchTopRatedTv,
   fetchTrendingAll,
+  tmdbImageUrl,
 } from "../services/tmdb";
 import { useAppStore } from "../store/useAppStore";
 
@@ -65,6 +68,26 @@ export function HomePage() {
     enabled: newestWatched !== undefined,
     ...standardQueryOptions,
   });
+
+  // warm the cache for the first screenful so art is already decoded on reveal
+  useEffect(() => {
+    const items = trending.data;
+    if (!items) {
+      return;
+    }
+    preloadImages([
+      ...items
+        .slice(0, 3)
+        .map((item) =>
+          item.backdropPath ? tmdbImageUrl(item.backdropPath, "w1280") : null,
+        ),
+      ...items
+        .slice(0, HERO_TRENDING_COUNT + 7)
+        .map((item) =>
+          item.posterPath ? tmdbImageUrl(item.posterPath, "w500") : null,
+        ),
+    ]);
+  }, [trending.data]);
 
   return (
     <div>

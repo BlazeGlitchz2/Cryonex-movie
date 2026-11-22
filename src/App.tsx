@@ -70,8 +70,11 @@ function DeepLinkHandler() {
       try {
         const u = new URL(String(url));
         if (u.protocol !== "cryonex:") return;
-        const path = `${u.pathname}${u.search}`;
-        if (path.startsWith("/watch/") || path === "/" || /^\/(movies|series|new|my-list|continue)$/.test(u.pathname)) navigate(path);
+        // Non-special schemes put the first segment in host: cryonex://watch/x/1 => host "watch", pathname "/x/1".
+        const path = `${u.host ? `/${u.host}` : ""}${u.pathname}${u.search}`;
+        if (path !== "/" && !path.startsWith("/watch/") && !/^\/(movies|series|new|my-list|continue)(\/|$)/.test(path)) return;
+        void import("@tauri-apps/api/core").then(({ invoke }) => invoke("log_nav", { url: path })).catch(() => {});
+        navigate(path);
       } catch { /* not a valid link; ignore */ }
     };
     let un: (() => void) | undefined;

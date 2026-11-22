@@ -50,6 +50,26 @@ fn set_embed_hosts(hosts: Vec<String>, state: tauri::State<EmbedHosts>) {
   *state.0.lock().unwrap() = hosts.into_iter().collect();
 }
 
+// Every deep-link navigation lands here, so Nova can verify (and audit) where the app actually went.
+#[tauri::command]
+fn log_nav(url: String) {
+  use std::io::Write;
+  let home = std::env::var("HOME").unwrap_or_default();
+  let line = format!("{} {}\n", chrono_stub_now(), url);
+  let _ = std::fs::OpenOptions::new()
+    .create(true)
+    .append(true)
+    .open(format!("{home}/.nova/cryonex-nav.log"))
+    .and_then(|mut f| f.write_all(line.as_bytes()));
+}
+
+fn chrono_stub_now() -> String {
+  std::time::SystemTime::now()
+    .duration_since(std::time::UNIX_EPOCH)
+    .map(|d| d.as_millis().to_string())
+    .unwrap_or_default()
+}
+
 fn effects_config() -> tauri::utils::config::WindowEffectsConfig {
   tauri::utils::config::WindowEffectsConfig {
     effects: vec![tauri::utils::WindowEffect::UnderWindowBackground],
@@ -97,7 +117,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_deep_link::init())
     .manage(EmbedHosts(Mutex::new(base_embed_hosts())))
-    .invoke_handler(tauri::generate_handler![set_embed_hosts])
+    .invoke_handler(tauri::generate_handler![set_embed_hosts, log_nav])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

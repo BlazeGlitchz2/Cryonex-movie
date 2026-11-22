@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, UserRound } from "lucide-react";
 import { useEffect } from "react";
 import { switchProfile } from "../../services/profileStorage";
 import {
+  GUEST_ID,
   PROFILE_HEX,
   profileInitial,
   profileInitialInk,
@@ -26,6 +27,9 @@ const tileRise: Variants = {
 export function WhoIsWatchingGate() {
   const profiles = useProfileStore((state) => state.profiles);
   const setManageOpen = useProfileStore((state) => state.setManageOpen);
+  const ensureGuestProfile = useProfileStore(
+    (state) => state.ensureGuestProfile,
+  );
   const pushToast = useToastStore((state) => state.pushToast);
 
   useEffect(() => {
@@ -125,6 +129,18 @@ export function WhoIsWatchingGate() {
           Manage profiles
         </button>
       )}
+      <button
+        type="button"
+        onClick={() => {
+          ensureGuestProfile();
+          switchProfile(GUEST_ID);
+          pushToast({ title: "Watching as Guest" });
+        }}
+        className="mt-5 flex items-center gap-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
+      >
+        <UserRound size={16} aria-hidden="true" />
+        Continue as guest
+      </button>
       </div>
     </motion.div>
   );

@@ -1,6 +1,6 @@
 import type { SyntheticEvent } from "react";
 
-export const IMAGE_RETRY_DELAYS = [450, 1400];
+export const IMAGE_RETRY_DELAYS = [450, 1400, 4500];
 
 // retry ladder for animated <motion.img> logo art that cannot use TmdbImage
 export function retryImageElement(
@@ -17,4 +17,21 @@ export function retryImageElement(
   window.setTimeout(() => {
     image.src = `${base}?retry=${attempt + 1}`;
   }, IMAGE_RETRY_DELAYS[attempt]);
+}
+
+// Warm the browser cache for art that is about to be shown, so scrollers and
+// the hero reveal finished images instead of empty frames.
+export function preloadImages(
+  urls: ReadonlyArray<string | null | undefined>,
+): void {
+  const seen = new Set<string>();
+  for (const url of urls) {
+    if (!url || seen.has(url)) {
+      continue;
+    }
+    seen.add(url);
+    const image = new Image();
+    image.decoding = "async";
+    image.src = url;
+  }
 }
