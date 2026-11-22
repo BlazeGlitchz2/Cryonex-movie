@@ -1,0 +1,42 @@
+[package]
+name = "app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
+repository = ""
+edition = "2024"
+rust-version = "1.90"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.6", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.12.7", features = [] }
+tauri-plugin-log = "2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# pinned to the same versions wry 0.57.3 uses so the objc2 types are shared, not duplicated
+objc2 = "0.6"
+block2 = "0.6"
+objc2-foundation = { version = "0.3.2", default-features = false, features = [
+  "std",
+  "NSString",
+  "NSError",
+] }
+objc2-web-kit = { version = "0.3.2", default-features = false, features = [
+  "std",
+  "block2",
+  "WKUserContentController",
+  "WKContentRuleList",
+  "WKContentRuleListStore",
+] }

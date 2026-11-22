@@ -1,0 +1,237 @@
+/* Self-hosted Sora: CSP blocks external fonts, desktop shell must work offline */
+@import "@fontsource/sora/400.css";
+@import "@fontsource/sora/600.css";
+@import "@fontsource/sora/700.css";
+@import "@fontsource/sora/800.css";
+@import "tailwindcss";
+
+/*
+  Cryonex "Spatial Smoked Glass" tokens.
+  Warm charcoal canvas (no blue cast), hairline rims instead of shadows,
+  one attention color: emerald marks ratings and real live-status only,
+  never buttons or decoration. Primary buttons stay white (Netflix grammar,
+  see DESIGN.md). Materials layer over the native macOS under-window blur.
+*/
+@theme {
+  --color-canvas: #121312;
+  --color-surface: #161614;
+  --color-surface-2: #1a1a17;
+  --color-hairline: rgba(255, 255, 255, 0.08);
+  --color-rim: rgba(255, 255, 255, 0.12);
+  --color-ink: #f5f5f7;
+  --color-ink-dim: rgba(255, 255, 255, 0.65);
+  --color-accent: #e5e7eb;
+  --color-emerald: #46d369;
+  --color-glass: rgba(22, 22, 19, 0.72);
+
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    system-ui, sans-serif;
+
+  --radius-hero: 20px;
+  --radius-card: 16px;
+  --radius-ctl: 12px;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    /* antialiased keeps Sora and SF Pro crisp on the macOS webview */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* selection is a focus state, so it earns the emerald accent at 25% */
+  ::selection {
+    background: rgba(70, 211, 105, 0.25);
+  }
+
+  button,
+  a,
+  select,
+  summary,
+  label {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgba(245, 245, 247, 0.7);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Thin cinema scrollbar, deliberate identity choice */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/*
+  Materials: the class contract for every surface in the shell.
+  .glass-surface stays as an alias of .material-card for backwards compat.
+*/
+.material-shell {
+  background: rgba(22, 22, 19, 0.82);
+  backdrop-filter: blur(48px) saturate(165%);
+  -webkit-backdrop-filter: blur(48px) saturate(165%);
+}
+
+.material-sidebar {
+  background: rgba(14, 14, 13, 0.45);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.material-card,
+.glass-surface {
+  background: rgba(24, 24, 21, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.material-dock {
+  background: rgba(25, 25, 23, 0.85);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.material-modal {
+  background: rgba(20, 20, 19, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/*
+  Window glass mode: the native macOS under-window blur shows the desktop
+  through the whole app. Tokens go translucent in one shot, so every
+  surface, gradient, and vignette using them follows. Canvas alpha 0.6.
+*/
+html[data-window-glass="true"] {
+  --color-canvas: rgba(18, 19, 18, 0.6);
+  --color-surface: rgba(22, 22, 20, 0.5);
+  --color-surface-2: rgba(26, 26, 23, 0.55);
+  --color-glass: rgba(20, 20, 19, 0.35);
+}
+
+/* Skeleton shimmer: purpose = communicates loading without spinners everywhere */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--color-surface) 40%,
+    var(--color-surface-2) 50%,
+    var(--color-surface) 60%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Hero backdrop slow drift, echoes a projector beam settling */
+@keyframes kenburns {
+  from {
+    transform: scale(1.04) translateX(0);
+  }
+  to {
+    transform: scale(1.12) translateX(-1.5%);
+  }
+}
+
+.kenburns {
+  animation: kenburns 18s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Safe-area helpers: Tailwind v4 ships no env() utilities, keeps the home bar clear */
+@utility dock-bottom {
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+@utility dock-bottom-raised {
+  bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+}
+
+@utility pb-canvas-safe {
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Below lg: halve the blur radius, large-radius backdrop-filter is the top GPU cost on low-end phones */
+@media (max-width: 1023px) {
+  .material-shell {
+    backdrop-filter: blur(24px) saturate(165%);
+    -webkit-backdrop-filter: blur(24px) saturate(165%);
+  }
+
+  .material-dock {
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  }
+}
+
+/* Touch: no hover means arrows are dead weight and taps must not flash hover zoom */
+@media (hover: none) {
+  .touch-hide {
+    display: none;
+  }
+
+  .touch-no-hover {
+    transition-duration: 0ms;
+  }
+
+  .group:hover .touch-no-hover {
+    transform: none;
+  }
+}
+
+/*
+  Film grain: the one identity texture of the cinema room.
+  Static noise, never animated, 3.5% opacity over everything.
+*/
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
