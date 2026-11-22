@@ -3,15 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
+    <link rel="dns-prefetch" href="https://image.tmdb.org" />
+    <link rel="preconnect" href="https://api.themoviedb.org" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#121312" />
     <title>Cryonex</title>
     <!--
-      Anti-flash fill only. No inline style attribute: it would beat the
-      stylesheet and keep the window opaque over the native vibrancy.
-      index.css wins over this rule by source order and specificity.
+      Anti-flash fill in the SAME cascade layer as index.css base rules so
+      index.css wins by source order; unlayered rules would beat the layer and
+      keep the window opaque over the native vibrancy.
     -->
-    <style>html{background:#121312}</style>
+    <style>@layer base{html{background:#121312}}</style>
   </head>
   <body>
     <div id="root"></div>

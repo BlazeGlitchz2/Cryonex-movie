@@ -12,10 +12,11 @@ import {
   type ReactNode,
 } from "react";
 import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
-import { searchMulti, tmdbImageUrl } from "../../services/tmdb";
+import { searchMulti } from "../../services/tmdb";
 import { useSearchHistoryStore } from "../../store/useSearchHistoryStore";
 import { useUIStore } from "../../store/useUIStore";
 import type { MediaItem } from "../../types/media";
+import TmdbImage from "../shared/TmdbImage";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
@@ -58,11 +59,11 @@ function PosterThumb({ item }: { item: MediaItem }) {
     );
   }
   return (
-    <img
+    <TmdbImage
       // tmdb.ts exposes no thumb size; w500 is the smallest allowed.
-      src={tmdbImageUrl(item.posterPath, "w500")}
+      path={item.posterPath}
+      size="w500"
       alt=""
-      loading="lazy"
       width={36}
       height={56}
       className="h-14 w-9 shrink-0 rounded-ctl border border-hairline object-cover"
@@ -451,7 +452,10 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
             className="w-full bg-transparent py-3.5 text-sm text-ink placeholder:text-ink-dim max-lg:min-h-11 max-lg:text-base"
           />
         </div>
-        <div ref={listRef} className="max-h-[50vh] overflow-y-auto">
+        <div
+          ref={listRef}
+          className="max-h-[50vh] overflow-y-auto overscroll-contain"
+        >
           {resultsContent}
         </div>
         {/* key caps are a desktop legend; touch has no keyboard to advertise */}

@@ -33,6 +33,7 @@ interface AppState {
 }
 
 // order = curl timing (movie 550 + tv 1396/1/1 avg, single run per URL)
+// first ten are the primary set, the rest are verified backups
 const DEFAULT_PROVIDERS: StreamProvider[] = [
   {
     id: "vidzee",
@@ -114,6 +115,57 @@ const DEFAULT_PROVIDERS: StreamProvider[] = [
     badge: "4K",
     movieTemplate: "https://vidfast.vc/movie/{id}",
     tvTemplate: "https://vidfast.vc/tv/{id}/{season}/{episode}",
+    enabled: true,
+  },
+  {
+    id: "vidsrc-me",
+    name: "VidSrc.me",
+    badge: "Backup",
+    movieTemplate: "https://vidsrc.me/embed/movie?tmdb={id}",
+    tvTemplate:
+      "https://vidsrc.me/embed/tv?tmdb={id}&season={season}&episode={episode}",
+    enabled: true,
+  },
+  {
+    id: "vidprime",
+    name: "VidPrime",
+    badge: "Backup",
+    movieTemplate: "https://vidsrc.pm/embed/movie/{id}",
+    tvTemplate: "https://vidsrc.pm/embed/tv/{id}/{season}/{episode}",
+    enabled: true,
+  },
+  {
+    id: "vixsrc",
+    name: "VixSrc",
+    badge: "Backup",
+    movieTemplate: "https://vixsrc.to/movie/{id}",
+    tvTemplate: "https://vixsrc.to/tv/{id}/{season}/{episode}",
+    enabled: true,
+  },
+  {
+    id: "vidrock",
+    name: "VidRock",
+    badge: "Backup",
+    movieTemplate: "https://vidrock.net/movie/{id}",
+    tvTemplate: "https://vidrock.net/tv/{id}/{season}/{episode}",
+    enabled: true,
+  },
+  {
+    id: "multiembed",
+    name: "MultiEmbed",
+    badge: "Backup",
+    movieTemplate: "https://multiembed.mov/?video_id={id}",
+    tvTemplate:
+      "https://multiembed.mov/?video_id={id}&tmdb=1&s={season}&e={episode}",
+    enabled: true,
+  },
+  {
+    id: "vcr",
+    name: "2Embed VCR",
+    badge: "Backup",
+    movieTemplate: "https://streamsrcs.2embed.cc/vcr?tmdb={id}",
+    tvTemplate:
+      "https://streamsrcs.2embed.cc/vcr?tmdb={id}&season={season}&episode={episode}",
     enabled: true,
   },
 ];
@@ -243,7 +295,7 @@ export const useAppStore = create<AppState>()(
         setItem,
         removeItem,
       })),
-      version: 3,
+      version: 4,
       migrate: (persisted) => {
         const state = persisted as Partial<AppState> | undefined;
         if (!state?.providers) {

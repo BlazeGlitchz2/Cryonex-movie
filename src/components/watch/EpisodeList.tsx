@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
-import { fetchSeasonEpisodes, tmdbImageUrl } from "../../services/tmdb";
+import { fetchSeasonEpisodes } from "../../services/tmdb";
 import type { Season } from "../../types/media";
+import TmdbImage from "../shared/TmdbImage";
 
 interface EpisodeListProps {
   tvId: number;
@@ -121,10 +122,10 @@ export default function EpisodeList({
               >
                 <div className="aspect-video w-36 shrink-0 overflow-hidden rounded-ctl bg-surface-2">
                   {episode.stillPath ? (
-                    <img
-                      src={tmdbImageUrl(episode.stillPath, "w500")}
+                    <TmdbImage
+                      path={episode.stillPath}
+                      size="w500"
                       alt=""
-                      loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.04]"
                     />
                   ) : (

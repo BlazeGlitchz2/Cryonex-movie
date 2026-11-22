@@ -130,9 +130,10 @@ State and actions:
   `recordWatch(entry: Omit<ContinueWatchingEntry, "lastWatchedAt">)`
   (upserts by id + mediaType, tv keeps latest season/episode),
   `removeFromContinueWatching(id: number, mediaType: MediaType)`
-- `providers: StreamProvider[]`, pre-seeded with ten enabled entries
+- `providers: StreamProvider[]`, pre-seeded with sixteen enabled entries
   (Vidzee, Peachify, Vidora, VidRift, YTHD, VidSrc, VidLink, VidSrc.net,
-  2Embed, VidFast), ordered by curl timing. See `DEFAULT_PROVIDERS` in
+  2Embed, VidFast, then backups VidSrc.me, VidPrime, VixSrc, VidRock,
+  MultiEmbed, 2Embed VCR), ordered by curl timing. See `DEFAULT_PROVIDERS` in
   `src/store/useAppStore.ts` for exact templates, which are the source of
   truth. New hosts flow into the native iframe allowlist automatically via
   `syncEmbedHosts` in `src/services/embedHosts.ts`, no other file changes.
@@ -145,8 +146,10 @@ State and actions:
   `setActiveProvider(id: string)`
 - `cinemaDim: boolean` (not persisted), `toggleCinemaDim()`
 
-Videasy is dead (DNS) and must not be re-added. The ten verified providers
-above are the complete set (R-17 honesty decision, see DESIGN.md).
+Videasy is dead (DNS) and must not be re-added. The sixteen verified
+providers above are the complete set (R-17 honesty decision, see
+DESIGN.md). Bump the store `version` whenever DEFAULT_PROVIDERS grows, so
+existing persisted records merge the new entries through `migrate`.
 
 ### UI store (`src/store/useUIStore.ts`)
 
@@ -265,6 +268,12 @@ Navigate with `react-router-dom`. Never hardcode URLs outside these.
   MediaItem[], loading?: boolean, error?: string | null, hideWhenEmpty?:
   boolean })`, horizontal scroller with visible scroll buttons, skeleton
   shimmer while loading, honest error text on failure.
+- `src/components/shared/TmdbImage.tsx`: `TmdbImage({ path | src, size,
+  alt, className, width, height, eager?, fetchPriority? })`. Every TMDB
+  artwork goes through it: viewport observer instead of native
+  `loading="lazy"` (WebKit leaves nested-scroller images blank), two
+  retries with a cache-busting query, then hidden. Pass `width` and
+  `height` so the observer can gate it; size-less logos load eagerly.
 - `src/components/shared/TrailerModal.tsx`: `TrailerModal({ videoKey: string
   | null, title: string, onClose: () => void })`, YouTube embed, Escape
   closes, focus trapped on open.
@@ -286,7 +295,9 @@ details/episodes queries say no episode exists. The dock hides itself on
   cause and the next action.
 - All text contrast WCAG AA minimum.
 - Full keyboard support, visible focus ring (already in `index.css`).
-- Every `<img>` gets width/height or aspect-ratio. Row posters lazy-load.
+- Every `<img>` gets width/height or aspect-ratio. Artwork uses
+  `TmdbImage`; native `loading="lazy"` is banned because WebKit leaves
+  images inside nested scrollers blank.
   Hero backdrop is an `<img>` with `fetchpriority="high"`, never lazy.
 - No fake data, no invented numbers, no decorative status dots. The
   emerald dot marks only real states (window glass, enabled server).

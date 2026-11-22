@@ -29,7 +29,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://image.tmdb.org data:; font-src 'self'; connect-src 'self' https://api.themoviedb.org ipc: http://ipc.localhost; frame-src https:; object-src 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://image.tmdb.org data:; font-src 'self'; connect-src 'self' https://api.themoviedb.org https://image.tmdb.org ipc: http://ipc.localhost; frame-src https:; object-src 'none'"
     }
   },
   "bundle": {

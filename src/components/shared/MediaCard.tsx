@@ -3,10 +3,11 @@ import { Check, Play, Plus, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchMediaDetails, tmdbImageUrl } from "../../services/tmdb";
+import { fetchMediaDetails } from "../../services/tmdb";
 import { useAppStore } from "../../store/useAppStore";
 import { useUIStore } from "../../store/useUIStore";
 import type { MediaItem, MediaType } from "../../types/media";
+import TmdbImage from "./TmdbImage";
 
 // Motion v2 token from DESIGN.md
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -119,12 +120,12 @@ export function MediaCard({ item, className = "w-40 shrink-0" }: MediaCardProps)
         className="material-card relative block overflow-hidden rounded-card"
       >
         {item.posterPath ? (
-          <img
-            src={tmdbImageUrl(item.posterPath, "w500")}
+          <TmdbImage
+            path={item.posterPath}
+            size="w500"
             alt=""
             width={500}
             height={750}
-            loading="lazy"
             className="touch-no-hover aspect-[2/3] w-full object-cover transition-transform duration-[450ms] ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
           />
         ) : (
@@ -152,8 +153,9 @@ export function MediaCard({ item, className = "w-40 shrink-0" }: MediaCardProps)
         className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-end rounded-card bg-gradient-to-t from-canvas/95 via-canvas/45 to-transparent p-3"
       >
         {logo ? (
-          <img
-            src={tmdbImageUrl(logo.filePath, "w500")}
+          <TmdbImage
+            path={logo.filePath}
+            size="w500"
             alt={item.title}
             className="max-h-10 w-auto max-w-[160px] object-contain drop-shadow-[0_2px_12px_rgba(7,8,10,0.6)]"
           />

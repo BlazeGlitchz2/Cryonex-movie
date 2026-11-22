@@ -310,7 +310,7 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
             <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div className="overflow-y-auto px-5 pb-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
           <AnimatePresence mode="wait" initial={false}>
             {editing === null ? (
               <motion.div

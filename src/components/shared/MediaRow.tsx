@@ -149,7 +149,7 @@ export function MediaRow({
           viewport={{ once: true, margin: "-40px" }}
           // py-6 -my-6: lift room inside the scroll box, outer rhythm kept;
           // trackpad vertical scroll keeps chaining (overscroll-y auto)
-          className="flex snap-x gap-4 overflow-x-auto overscroll-x-contain overscroll-y-auto py-6 -my-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain py-6 -my-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {items.map((item) => (
             <motion.div

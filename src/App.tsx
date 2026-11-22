@@ -30,7 +30,9 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       // only retry reachable API hiccups; code bugs surface immediately
       retry: (failureCount, error) => {
-        if (error instanceof TmdbError && failureCount < 2) return true;
+        if (error instanceof TmdbError && error.retryable && failureCount < 2) {
+          return true;
+        }
         return false;
       },
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),

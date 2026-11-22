@@ -69,7 +69,7 @@ export function SeriesPage() {
       )}
       {genres.data && (
         <div
-          className="mt-4 flex gap-2 overflow-x-auto pb-1"
+          className="mt-4 flex gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-1"
           role="group"
           aria-label="Browse by genre"
         >

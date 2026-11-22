@@ -11,9 +11,13 @@ import type {
 const BASE_URL = "https://api.themoviedb.org/3";
 
 export class TmdbError extends Error {
-  constructor(message: string) {
+  // 4xx answers are final, so retrying them only wastes the player's time
+  readonly retryable: boolean;
+
+  constructor(message: string, retryable = true) {
     super(message);
     this.name = "TmdbError";
+    this.retryable = retryable;
   }
 }
 
@@ -22,6 +26,7 @@ function getApiKey(): string {
   if (!apiKey) {
     throw new TmdbError(
       "TMDB API key is missing. Set VITE_TMDB_API_KEY in your .env file.",
+      false,
     );
   }
   return apiKey;
@@ -39,16 +44,22 @@ async function tmdbFetch<T>(
     }
   }
 
+  const controller = new AbortController();
+  // a stalled request must fail into the retry path, not hold a skeleton forever
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
   let response: Response;
   try {
-    response = await fetch(url);
+    response = await fetch(url, { signal: controller.signal });
   } catch {
     throw new TmdbError("Could not reach TMDB. Check your internet connection.");
+  } finally {
+    window.clearTimeout(timeout);
   }
 
   if (!response.ok) {
     throw new TmdbError(
       `TMDB request to ${path} failed with HTTP ${response.status}.`,
+      response.status >= 500 || response.status === 429,
     );
   }
 
@@ -173,7 +184,8 @@ export function tmdbImageUrl(
   path: string,
   size: "w500" | "w780" | "w1280" | "original",
 ): string {
-  return `https://image.tmdb.org/t/p/${size}/${path}`;
+  // TMDB paths arrive with a leading slash already, so strip it to avoid // in the CDN URL
+  return `https://image.tmdb.org/t/p/${size}/${path.replace(/^\/+/, "")}`;
 }
 
 async function fetchMediaList(

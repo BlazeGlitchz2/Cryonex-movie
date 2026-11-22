@@ -1,9 +1,9 @@
 import { ChevronRight, Play, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { tmdbImageUrl } from "../../services/tmdb";
 import { useAppStore } from "../../store/useAppStore";
 import { buildWatchPath } from "../shared/MediaCard";
+import TmdbImage from "../shared/TmdbImage";
 
 // Motion v2 token from DESIGN.md
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -23,7 +23,7 @@ export function ContinueWatchingRow() {
         Continue watching
         <ChevronRight size={16} aria-hidden="true" className="text-ink-dim" />
       </h2>
-      <div className="mt-4 flex gap-4 overflow-x-auto overscroll-x-contain overscroll-y-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mt-4 flex gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {entries.map((entry, i) => (
           <motion.div
             key={`${entry.mediaType}-${entry.id}`}
@@ -54,21 +54,21 @@ export function ContinueWatchingRow() {
             >
               <div className="relative aspect-video w-full">
                 {entry.backdropPath ? (
-                  <img
-                    src={tmdbImageUrl(entry.backdropPath, "w780")}
+                  <TmdbImage
+                    path={entry.backdropPath}
+                    size="w780"
                     alt=""
                     width={780}
                     height={439}
-                    loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
                   />
                 ) : entry.posterPath ? (
-                  <img
-                    src={tmdbImageUrl(entry.posterPath, "w500")}
+                  <TmdbImage
+                    path={entry.posterPath}
+                    size="w500"
                     alt=""
                     width={500}
                     height={750}
-                    loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
                   />
                 ) : (

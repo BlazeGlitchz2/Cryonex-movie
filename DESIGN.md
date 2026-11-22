@@ -34,8 +34,9 @@ smoked-glass style, dial ENERGY 2 / RHYTHM 2 / MOTION 3.
 2. The mini-player dock shows no progress bar and no timestamp.
    Cross-origin embeds cannot report playback time, so the dock carries
    resume controls only.
-3. Videasy is dead (DNS). The server engine keeps the ten verified
-   providers; nothing links to a dead host.
+3. Videasy is dead (DNS). The server engine keeps the sixteen verified
+   providers (ten primary plus six backups); nothing links to a dead
+   host.
 
 ## Tokens
 

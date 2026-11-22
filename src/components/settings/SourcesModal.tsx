@@ -622,7 +622,7 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
             <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div className="overflow-y-auto px-5 pb-5 max-lg:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 max-lg:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           {providers.length === 0 ? (
             <p className="py-6 text-sm text-ink-dim">
               No sources yet. Add one below.

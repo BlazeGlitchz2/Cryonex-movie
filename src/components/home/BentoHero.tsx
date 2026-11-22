@@ -9,6 +9,8 @@ import { useUIStore } from "../../store/useUIStore";
 import type { MediaDetails, MediaItem } from "../../types/media";
 import { buildWatchPath } from "../shared/MediaCard";
 import { standardQueryOptions } from "../shared/MediaRow";
+import TmdbImage from "../shared/TmdbImage";
+import { retryImageElement } from "../../services/imageRetry";
 
 // Motion v2 tokens from DESIGN.md: ambient crossfade 800ms, stage 700ms in
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -112,6 +114,7 @@ function SpotlightContent({ item }: { item: MediaItem }) {
             <motion.img
               src={tmdbImageUrl(logo.filePath, "w500")}
               alt={item.title}
+              onError={retryImageElement}
               initial={{ clipPath: "inset(0 100% 0 0)", filter: "blur(8px)" }}
               animate={{
                 clipPath: "inset(0 0% 0 0)",
@@ -216,8 +219,9 @@ function SpotlightCard({
           transition={{ duration: 0.8, ease: EASE }}
         >
           {active.backdropPath ? (
-            <img
-              src={tmdbImageUrl(active.backdropPath, "w1280")}
+            <TmdbImage
+              path={active.backdropPath}
+              size="w1280"
               alt=""
               width={1280}
               height={720}
@@ -293,12 +297,12 @@ function HeroSideCard({ item }: { item: MediaItem }) {
       className={`material-card group relative ${HERO_HEIGHT} w-[72%] shrink-0 snap-start overflow-hidden rounded-hero text-left transition-colors duration-350 ease-in-out hover:border-white/20 sm:w-[46%] lg:w-auto`}
     >
       {item.posterPath ? (
-        <img
-          src={tmdbImageUrl(item.posterPath, "w500")}
+        <TmdbImage
+          path={item.posterPath}
+          size="w500"
           alt=""
           width={500}
           height={750}
-          loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : (
@@ -312,8 +316,9 @@ function HeroSideCard({ item }: { item: MediaItem }) {
         <CTag item={item} />
         <div className="mt-2 flex min-h-[36px] items-end overflow-hidden">
           {logo ? (
-            <img
-              src={tmdbImageUrl(logo.filePath, "w500")}
+            <TmdbImage
+              path={logo.filePath}
+              size="w500"
               alt={item.title}
               className="max-h-9 w-auto max-w-[200px] object-contain drop-shadow-[0_2px_12px_rgba(7,8,10,0.6)]"
             />
@@ -400,7 +405,7 @@ export function BentoHero({ items, loading, error }: BentoHeroProps) {
       <SpotlightCard spots={spots} index={activeIndex} onSelect={setIndex} />
       {sides.length > 0 && (
         // below lg the two portrait cards swipe; at lg the original 2-up grid returns
-        <div className="flex snap-x gap-4 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:col-span-5 lg:grid lg:grid-cols-2 lg:overflow-visible lg:pb-0">
+        <div className="flex snap-x gap-4 overflow-x-auto overscroll-x-contain max-lg:overflow-y-hidden pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:col-span-5 lg:grid lg:grid-cols-2 lg:overflow-visible lg:pb-0">
           {sides.map((item) => (
             <HeroSideCard key={`${item.mediaType}-${item.id}`} item={item} />
           ))}

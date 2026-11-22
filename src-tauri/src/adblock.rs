@@ -16,46 +16,69 @@ use objc2_web_kit::{WKContentRuleList, WKContentRuleListStore, WKUserContentCont
 
 /// Compiled into a WKContentRuleList at startup and attached to the
 /// webview's user content controller so it applies in all frames.
+/// WebKit url-filters reject regex disjunctions (|), so network blocks use
+/// one catch-all filter gated by if-domain arrays instead.
 pub const CONTENT_BLOCKER_RULES: &str = r#"[
   {
     "trigger": {
-      "url-filter": "^[a-z][a-z0-9+.-]*://([^/?#]*\\.)?(doubleclick\\.net|googlesyndication\\.com|googleadservices\\.com|googletagservices\\.com|google-analytics\\.com|adservice\\.google\\.com|imasdk\\.googleapis\\.com|amazon-adsystem\\.com|criteo\\.com|criteo\\.net|adnxs\\.com|adform\\.net|adform\\.com|casalemedia\\.com|pubmatic\\.com|rubiconproject\\.com|openx\\.net|smartadserver\\.com|adroll\\.com|teads\\.tv|media\\.net|bidgear\\.com|adsrvr\\.org|bidswitch\\.net|mathtag\\.com|indexexchange\\.com|33across\\.com|triplelift\\.com|sharethrough\\.com|yieldmo\\.com|sovrn\\.com|lijit\\.com|gumgum\\.com|tribalfusion\\.com|districtm\\.io|contextweb\\.com|rlcdn\\.com|conversantmedia\\.com|valueclick\\.com|demdex\\.net|adobedtm\\.com|serving-sys\\.com|moatads\\.com)([:/?#]|$)",
-      "load-type": ["third-party"]
+      "url-filter": ".*",
+      "if-domain": [
+        "*doubleclick.net", "*googlesyndication.com", "*googleadservices.com",
+        "*googletagservices.com", "*google-analytics.com", "*adservice.google.com",
+        "*imasdk.googleapis.com", "*amazon-adsystem.com", "*criteo.com",
+        "*criteo.net", "*adnxs.com", "*adform.net", "*adform.com",
+        "*casalemedia.com", "*pubmatic.com", "*rubiconproject.com",
+        "*openx.net", "*smartadserver.com", "*adroll.com", "*teads.tv",
+        "*media.net", "*bidgear.com", "*adsrvr.org", "*bidswitch.net",
+        "*mathtag.com", "*indexexchange.com", "*33across.com", "*triplelift.com",
+        "*sharethrough.com", "*yieldmo.com", "*sovrn.com", "*lijit.com",
+        "*gumgum.com", "*tribalfusion.com", "*districtm.io", "*contextweb.com",
+        "*rlcdn.com", "*conversantmedia.com", "*valueclick.com", "*demdex.net",
+        "*adobedtm.com", "*serving-sys.com", "*moatads.com",
+        "*popads.net", "*propellerads.com", "*monetag.com", "*adsterra.com",
+        "*hilltopads.com", "*hilltopads.net", "*exoclick.com", "*juicyads.com",
+        "*clickadu.com", "*popcash.net", "*adcash.com", "*zeropark.com",
+        "*admaven.com", "*evadav.com", "*trafficfactory.biz", "*popunderclick.com",
+        "*mgid.com", "*taboola.com", "*outbrain.com", "*revcontent.com",
+        "*nativo.com", "*nativo.net", "*zergnet.com", "*dianomi.com",
+        "*content.ad", "*adblade.com",
+        "*connatix.com", "*primis.tech", "*aniview.com", "*cedato.com",
+        "*spotxchange.com", "*spotx.tv", "*springserve.com", "*sekindo.com",
+        "*vidoomy.com", "*vdo.ai", "*vi.ai", "*viralize.com", "*viralize.tv",
+        "*videohub.tv", "*innovid.com", "*beachfront.com", "*unruly.co",
+        "*yldbt.com", "*chocolate-platform.com", "*mantisadnetwork.com",
+        "*vidcrunch.com",
+        "*allmygoodlife.com", "*allmygreatestlife.com", "*allmygreatlife.com",
+        "*allmyverygreatlife.com", "*mygoodlives.com", "*find-my-great-life.com",
+        "*totogetica.com", "*togenron.com", "*stremanp.com", "*vidcpm.com",
+        "*dadspms.com", "*ehu96t2p.com", "*inabsolor.com", "*ie8eamus.com",
+        "*bestvideo2019.xyz", "*fingahvf.top", "*mc.yandex.ru"
+      ]
     },
     "action": { "type": "block" }
   },
   {
-    "trigger": {
-      "url-filter": "^[a-z][a-z0-9+.-]*://([^/?#]*\\.)?(popads\\.net|propellerads\\.com|monetag\\.com|adsterra\\.com|hilltopads\\.com|hilltopads\\.net|exoclick\\.com|juicyads\\.com|clickadu\\.com|popcash\\.net|adcash\\.com|zeropark\\.com|admaven\\.com|evadav\\.com|trafficfactory\\.biz|popunderclick\\.com)([:/?#]|$)",
-      "load-type": ["third-party"]
-    },
+    "trigger": { "url-filter": "ads\\.js" },
     "action": { "type": "block" }
   },
   {
-    "trigger": {
-      "url-filter": "^[a-z][a-z0-9+.-]*://([^/?#]*\\.)?(mgid\\.com|taboola\\.com|outbrain\\.com|revcontent\\.com|nativo\\.com|nativo\\.net|zergnet\\.com|dianomi\\.com|content\\.ad|adblade\\.com)([:/?#]|$)",
-      "load-type": ["third-party"]
-    },
+    "trigger": { "url-filter": "popunder" },
     "action": { "type": "block" }
   },
   {
-    "trigger": {
-      "url-filter": "^[a-z][a-z0-9+.-]*://([^/?#]*\\.)?(connatix\\.com|primis\\.tech|aniview\\.com|cedato\\.com|spotxchange\\.com|spotx\\.tv|springserve\\.com|sekindo\\.com|vidoomy\\.com|vdo\\.ai|vi\\.ai|viralize\\.com|viralize\\.tv|videohub\\.tv|innovid\\.com|beachfront\\.com|unruly\\.co|yldbt\\.com|chocolate-platform\\.com|mantisadnetwork\\.com|vidcrunch\\.com)([:/?#]|$)",
-      "load-type": ["third-party"]
-    },
+    "trigger": { "url-filter": "-banner-" },
     "action": { "type": "block" }
   },
   {
-    "trigger": {
-      "url-filter": "^[a-z][a-z0-9+.-]*://([^/?#]*\\.)?(allmygoodlife\\.com|allmygreatestlife\\.com|allmygreatlife\\.com|allmyverygreatlife\\.com|mygoodlives\\.com|find-my-great-life\\.com|totogetica\\.com|togenron\\.com|stremanp\\.com|vidcpm\\.com|dadspms\\.com|ehu96t2p\\.com|inabsolor\\.com|ie8eamus\\.com|bestvideo2019\\.xyz|fingahvf\\.top|mc\\.yandex\\.ru)([:/?#]|$)",
-      "load-type": ["third-party"]
-    },
+    "trigger": { "url-filter": "/prebid" },
     "action": { "type": "block" }
   },
   {
-    "trigger": {
-      "url-filter": "(/ads\\.js|popunder|-banner-|/prebid|/adserver/|/advert)"
-    },
+    "trigger": { "url-filter": "/adserver/" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "/advert" },
     "action": { "type": "block" }
   },
   {

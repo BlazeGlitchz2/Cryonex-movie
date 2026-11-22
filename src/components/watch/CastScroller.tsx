@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { tmdbImageUrl } from "../../services/tmdb";
 import type { CastMember } from "../../types/media";
+import TmdbImage from "../shared/TmdbImage";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 export default function CastScroller({ cast }: { cast: CastMember[] }) {
   return (
-    <div className="flex gap-4 overflow-x-auto pb-3">
+    <div className="flex gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-3">
       {cast.map((member) => (
         <motion.figure
           key={member.id}
@@ -20,10 +20,10 @@ export default function CastScroller({ cast }: { cast: CastMember[] }) {
             transition={{ duration: 0.35, ease: EASE }}
           >
             {member.profilePath ? (
-              <img
-                src={tmdbImageUrl(member.profilePath, "w500")}
+              <TmdbImage
+                path={member.profilePath}
+                size="w500"
                 alt=""
-                loading="lazy"
                 width={96}
                 height={96}
                 className="h-24 w-24 rounded-full border border-hairline object-cover"

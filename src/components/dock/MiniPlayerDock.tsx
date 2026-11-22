@@ -13,11 +13,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   fetchMediaDetails,
   fetchSeasonEpisodes,
-  tmdbImageUrl,
 } from "../../services/tmdb";
 import { useAppStore } from "../../store/useAppStore";
 import { buildWatchPath } from "../shared/MediaCard";
 import { standardQueryOptions } from "../shared/MediaRow";
+import TmdbImage from "../shared/TmdbImage";
 
 // Motion v2 token from DESIGN.md
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -88,9 +88,9 @@ export function MiniPlayerDock() {
   })();
 
   const enabledProviders = providers.filter((provider) => provider.enabled);
-  const activeProvider = enabledProviders.find(
-    (provider) => provider.id === activeProviderId,
-  );
+  const activeProvider =
+    enabledProviders.find((provider) => provider.id === activeProviderId) ??
+    enabledProviders[0];
 
   const cycleServer = () => {
     if (enabledProviders.length === 0) return;
@@ -127,20 +127,21 @@ export function MiniPlayerDock() {
           className="material-dock fixed left-1/2 z-40 flex w-max -translate-x-1/2 items-center gap-3 rounded-hero px-5 py-2.5 shadow-2xl dock-bottom max-lg:gap-2 max-lg:px-3 max-lg:max-w-[calc(100vw-2rem)] max-lg:dock-bottom-raised lg:max-w-3xl"
         >
           {entry.backdropPath ? (
-            <img
+            <TmdbImage
               // tmdb.ts exposes no w300 size; w500 is the smallest allowed
-              src={tmdbImageUrl(entry.backdropPath, "w500")}
+              path={entry.backdropPath}
+              size="w500"
               alt=""
-              loading="lazy"
               width={44}
               height={44}
               className={thumbClass}
             />
           ) : entry.posterPath ? (
-            <img
-              src={tmdbImageUrl(entry.posterPath, "w500")}
+            <TmdbImage
+              key={entry.posterPath}
+              path={entry.posterPath}
+              size="w500"
               alt=""
-              loading="lazy"
               width={44}
               height={44}
               className={thumbClass}

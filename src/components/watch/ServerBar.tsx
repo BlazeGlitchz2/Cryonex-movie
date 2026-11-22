@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { StreamProvider } from "../../types/media";
 
@@ -56,6 +56,33 @@ export default function ServerBar({
 
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
+    if (!scroller) {
+      return;
+    }
+    // a mouse wheel has no horizontal delta, so map vertical wheel onto the
+    // strip until an edge, where the event chains back to the page
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+        return;
+      }
+      const max = scroller.scrollWidth - scroller.clientWidth;
+      if (max <= 0) {
+        return;
+      }
+      const atStart = scroller.scrollLeft <= 0;
+      const atEnd = scroller.scrollLeft >= max - 1;
+      if ((event.deltaY < 0 && atStart) || (event.deltaY > 0 && atEnd)) {
+        return;
+      }
+      event.preventDefault();
+      scroller.scrollLeft += event.deltaY;
+    };
+    scroller.addEventListener("wheel", onWheel, { passive: false });
+    return () => scroller.removeEventListener("wheel", onWheel);
+  }, []);
+
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
     const pill = scroller?.querySelector<HTMLElement>(
       `[data-server-id="${CSS.escape(activeId)}"]`,
     );
@@ -92,12 +119,33 @@ export default function ServerBar({
         </div>
       )}
 
-      <div className="relative min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
+        <AnimatePresence initial={false}>
+          {edges.left && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: EASE }}
+              onClick={() =>
+                scrollerRef.current?.scrollBy({
+                  left: -Math.max(160, (scrollerRef.current?.clientWidth ?? 320) * 0.7),
+                  behavior: "smooth",
+                })
+              }
+              aria-label="Scroll servers left"
+              className="grid size-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-ink transition-colors duration-[250ms] ease-in-out hover:border-white/60"
+            >
+              <ChevronLeft size={16} aria-hidden="true" />
+            </motion.button>
+          )}
+        </AnimatePresence>
         <div
           ref={scrollerRef}
           role="group"
           aria-label="Streaming sources"
-          className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto overflow-y-hidden overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           <AnimatePresence initial={false} mode="popLayout">
             {providers.map((provider) => {
@@ -148,6 +196,27 @@ export default function ServerBar({
             })}
           </AnimatePresence>
         </div>
+        <AnimatePresence initial={false}>
+          {edges.right && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: EASE }}
+              onClick={() =>
+                scrollerRef.current?.scrollBy({
+                  left: Math.max(160, (scrollerRef.current?.clientWidth ?? 320) * 0.7),
+                  behavior: "smooth",
+                })
+              }
+              aria-label="Scroll servers right"
+              className="grid size-7 shrink-0 place-items-center rounded-full border border-white/20 bg-white/5 text-ink transition-colors duration-[250ms] ease-in-out hover:border-white/60"
+            >
+              <ChevronRight size={16} aria-hidden="true" />
+            </motion.button>
+          )}
+        </AnimatePresence>
         {/* edge fades carry the dock fill so pills sink into the strip */}
         <motion.div
           aria-hidden="true"

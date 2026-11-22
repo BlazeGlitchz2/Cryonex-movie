@@ -44,6 +44,7 @@ import {
   queryErrorMessage,
   standardQueryOptions,
 } from "../shared/MediaRow";
+import TmdbImage from "../shared/TmdbImage";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 const TRAILER_DELAY_MS = 1200;
@@ -168,7 +169,7 @@ function ServerPill({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.98 }}
               transition={{ duration: 0.25, ease: EASE }}
-              className="material-modal absolute bottom-full left-0 z-30 mb-2 w-56 rounded-hero p-1.5 shadow-2xl"
+              className="material-modal absolute bottom-full left-0 z-30 mb-2 max-h-72 w-56 overflow-y-auto overscroll-contain rounded-hero p-1.5 shadow-2xl"
             >
               {enabled.length === 0 ? (
                 <p className="px-3 py-2 text-xs leading-relaxed text-ink-dim">
@@ -233,11 +234,11 @@ function EpisodeRow({
     >
       <div className="relative aspect-video w-[140px] shrink-0 overflow-hidden rounded-ctl bg-surface-2">
         {episode.stillPath ? (
-          <img
+          <TmdbImage
             // tmdb.ts exposes no w300 size; w500 is the smallest allowed.
-            src={tmdbImageUrl(episode.stillPath, "w500")}
+            path={episode.stillPath}
+            size="w500"
             alt=""
-            loading="lazy"
             className="h-full w-full object-cover transition-transform duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.04]"
           />
         ) : (
@@ -400,10 +401,10 @@ function SimilarCard({
         className="block w-full"
       >
         {tile.backdropPath ? (
-          <img
-            src={tmdbImageUrl(tile.backdropPath, "w780")}
+          <TmdbImage
+            path={tile.backdropPath}
+            size="w780"
             alt=""
-            loading="lazy"
             width={780}
             height={439}
             className="aspect-video w-full bg-surface-2 object-cover transition-transform duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
@@ -797,7 +798,7 @@ function DetailOverlay({
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md"
+      className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-black/75 backdrop-blur-md"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -879,12 +880,13 @@ function DetailOverlay({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.45, ease: EASE }}
                   >
-                    <img
+                    <TmdbImage
                       src={backdropUrl}
                       alt=""
                       width={1280}
                       height={720}
                       fetchPriority="high"
+                      eager
                       className="h-full w-full object-cover"
                     />
                   </motion.div>
@@ -959,11 +961,9 @@ function DetailOverlay({
                       transition={{ duration: 0.7, ease: EASE }}
                     >
                       {details.titleLogos[0] ? (
-                        <img
-                          src={tmdbImageUrl(
-                            details.titleLogos[0].filePath,
-                            "w500",
-                          )}
+                        <TmdbImage
+                          path={details.titleLogos[0].filePath}
+                          size="w500"
                           alt={details.title}
                           className="max-h-14 max-w-[300px] w-auto object-contain drop-shadow-[0_4px_24px_rgba(7,8,10,0.7)]"
                         />
@@ -1061,7 +1061,7 @@ function DetailOverlay({
             </AnimatePresence>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
                 key={itemKey}

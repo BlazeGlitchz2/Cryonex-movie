@@ -44,12 +44,13 @@ export function WhoIsWatchingGate() {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[45] flex flex-col items-center justify-center bg-canvas px-6"
+      className="fixed inset-0 z-[45] flex overflow-y-auto bg-canvas px-6 py-10"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.3, ease: EASE } }}
       transition={{ duration: 0.45, ease: EASE }}
     >
+      <div className="m-auto flex flex-col items-center">
       <h1 className="font-display text-2xl font-bold text-ink">
         Who&apos;s watching?
       </h1>
@@ -95,6 +96,7 @@ export function WhoIsWatchingGate() {
         <Users size={16} aria-hidden="true" />
         Manage profiles
       </button>
+      </div>
     </motion.div>
   );
 }

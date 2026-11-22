@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Play, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { tmdbImageUrl } from "../services/tmdb";
 import { useAppStore } from "../store/useAppStore";
 import { buildWatchPath } from "../components/shared/MediaCard";
+import TmdbImage from "../components/shared/TmdbImage";
 
 // Motion v2 token from DESIGN.md
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -66,19 +66,19 @@ export function ContinueWatchingPage() {
                 >
                   <div className="relative aspect-video w-full bg-surface-2">
                     {entry.backdropPath ? (
-                      <img
-                        src={tmdbImageUrl(entry.backdropPath, "w780")}
+                      <TmdbImage
+                        path={entry.backdropPath}
+                        size="w780"
                         alt=""
-                        loading="lazy"
                         width={780}
                         height={439}
                         className="h-full w-full object-cover transition-transform duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
                       />
                     ) : entry.posterPath ? (
-                      <img
-                        src={tmdbImageUrl(entry.posterPath, "w500")}
+                      <TmdbImage
+                        path={entry.posterPath}
+                        size="w500"
                         alt=""
-                        loading="lazy"
                         width={500}
                         height={750}
                         className="h-full w-full object-cover transition-transform duration-350 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-[1.03]"
