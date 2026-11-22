@@ -9,7 +9,7 @@ import {
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { rehydrateForActiveProfile } from "../../services/profileStorage";
+import { rehydrateForActiveProfile, switchProfile } from "../../services/profileStorage";
 import {
   PROFILE_COLORS,
   PROFILE_HEX,
@@ -395,8 +395,17 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
                       renameProfile(editingProfile.id, name);
                       setProfileColor(editingProfile.id, color);
                     } else {
-                      addProfile(name, color);
-                      pushToast({ title: "Profile added", tone: "success" });
+                      // the very first profile drops straight into the app:
+                      // there is nobody else it could be watching for
+                      const isFirst = profiles.length === 0;
+                      const newId = addProfile(name, color);
+                      if (isFirst) {
+                        switchProfile(newId);
+                        useProfileStore.getState().setManageOpen(false);
+                        pushToast({ title: `Watching as ${name}` });
+                      } else {
+                        pushToast({ title: "Profile added", tone: "success" });
+                      }
                     }
                     finishEditing();
                   }}

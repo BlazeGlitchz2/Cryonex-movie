@@ -95,6 +95,7 @@ fn vibrancy_state(window: &tauri::WebviewWindow) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_deep_link::init())
     .manage(EmbedHosts(Mutex::new(base_embed_hosts())))
     .invoke_handler(tauri::generate_handler![set_embed_hosts])
     .setup(|app| {

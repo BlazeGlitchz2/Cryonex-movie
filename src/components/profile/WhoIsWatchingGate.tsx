@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useEffect } from "react";
 import { switchProfile } from "../../services/profileStorage";
 import {
@@ -54,13 +54,39 @@ export function WhoIsWatchingGate() {
       <h1 className="font-display text-2xl font-bold text-ink">
         Who&apos;s watching?
       </h1>
+      {profiles.length === 0 && (
+        <p className="mt-2 text-sm text-ink-dim">
+          Create a profile to make this cinema yours
+        </p>
+      )}
       <motion.div
         variants={tileStagger}
         initial="hidden"
         animate="show"
         className="mt-10 flex flex-wrap items-start justify-center gap-8"
       >
-        {profiles.map((profile, index) => (
+        {profiles.length === 0 ? (
+          <motion.button
+            variants={tileRise}
+            whileHover={{ y: -4, transition: { duration: 0.25, ease: EASE } }}
+            whileTap={{ scale: 0.96, transition: { duration: 0.25, ease: EASE } }}
+            type="button"
+            autoFocus
+            onClick={() => setManageOpen(true)}
+            className="group flex w-[120px] flex-col items-center gap-3"
+          >
+            <span
+              aria-hidden="true"
+              className="grid size-[120px] place-items-center rounded-[12px] border-2 border-dashed border-white/25 text-ink-dim transition-colors duration-[250ms] ease-in-out group-hover:border-white/60 group-hover:text-ink"
+            >
+              <Plus size={28} aria-hidden="true" />
+            </span>
+            <span className="text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out group-hover:text-ink">
+              Create profile
+            </span>
+          </motion.button>
+        ) : (
+          profiles.map((profile, index) => (
           <motion.button
             key={profile.id}
             variants={tileRise}
@@ -86,16 +112,19 @@ export function WhoIsWatchingGate() {
             </span>
             <span className="text-sm text-ink">{profile.name}</span>
           </motion.button>
-        ))}
+          ))
+        )}
       </motion.div>
-      <button
-        type="button"
-        onClick={() => setManageOpen(true)}
-        className="mt-12 flex items-center gap-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
-      >
-        <Users size={16} aria-hidden="true" />
-        Manage profiles
-      </button>
+      {profiles.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setManageOpen(true)}
+          className="mt-12 flex items-center gap-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
+        >
+          <Users size={16} aria-hidden="true" />
+          Manage profiles
+        </button>
+      )}
       </div>
     </motion.div>
   );

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { MiniPlayerDock } from "./components/dock/MiniPlayerDock";
@@ -62,6 +62,26 @@ function ScrollToTop() {
   return null;
 }
 
+// cryonex://watch/... links from the Nova assistant land here and become router navigations.
+function DeepLinkHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const route = (url: unknown) => {
+      try {
+        const u = new URL(String(url));
+        if (u.protocol !== "cryonex:") return;
+        const path = `${u.pathname}${u.search}`;
+        if (path.startsWith("/watch/") || path === "/" || /^\/(movies|series|new|my-list|continue)$/.test(u.pathname)) navigate(path);
+      } catch { /* not a valid link; ignore */ }
+    };
+    let un: (() => void) | undefined;
+    import("@tauri-apps/plugin-deep-link").then(({ getCurrent }) => void getCurrent().then(route)).catch(() => {});
+    import("@tauri-apps/api/event").then(({ listen }) => void listen("deep-link://new-url", (e) => route((e as { payload?: unknown }).payload)).then((f) => (un = f)));
+    return () => un?.();
+  }, [navigate]);
+  return null;
+}
+
 function RoutedApp() {
   const location = useLocation();
   const providers = useAppStore((s) => s.providers);
@@ -87,6 +107,7 @@ function RoutedApp() {
   return (
     <>
       <ScrollToTop />
+      <DeepLinkHandler />
       <AppShell>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

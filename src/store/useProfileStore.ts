@@ -36,7 +36,7 @@ interface ProfileState {
   activeProfileId: string | null;
   pickerOpen: boolean;
   manageOpen: boolean;
-  addProfile: (name: string, color: ProfileColor) => void;
+  addProfile: (name: string, color: ProfileColor) => string;
   renameProfile: (id: string, name: string) => void;
   setProfileColor: (id: string, color: ProfileColor) => void;
   deleteProfile: (id: string) => void;
@@ -62,17 +62,17 @@ migrateLegacyData();
 export const useProfileStore = create<ProfileState>()(
   persist(
     (set) => ({
-      profiles: [{ id: "hamza", name: "Hamza", color: "crimson" }],
-      activeProfileId: "hamza",
+      profiles: [],
+      activeProfileId: null,
       pickerOpen: false,
       manageOpen: false,
-      addProfile: (name, color) =>
-        set((state) => ({
-          profiles: [
-            ...state.profiles,
-            { id: crypto.randomUUID(), name, color },
-          ],
-        })),
+      addProfile: (name: string, color: ProfileColor) => {
+    const id = crypto.randomUUID();
+    set((state) => ({
+      profiles: [...state.profiles, { id, name, color }],
+    }));
+    return id;
+  },
       renameProfile: (id, name) =>
         set((state) => ({
           profiles: state.profiles.map((profile) =>
@@ -112,6 +112,25 @@ export const useProfileStore = create<ProfileState>()(
     }),
     {
       name: "cryonex-profiles",
+      version: 3,
+      migrate: (persisted, version) => {
+        const state = persisted as
+          | { profiles?: Profile[]; activeProfileId?: string | null }
+          | undefined;
+        // drop the old auto-seeded Hamza for visitors who never saved anything,
+        // so first-run shows the create-profile gate instead of a stranger's name
+        const seeded =
+          state?.profiles?.length === 1 &&
+          state.profiles[0]?.id === "hamza" &&
+          state.profiles[0]?.name === "Hamza";
+        const hasHamzaData =
+          localStorage.getItem("cryonex-store::hamza") !== null ||
+          localStorage.getItem("cryonex-search-history::hamza") !== null;
+        if (version < 3 && seeded && !hasHamzaData) {
+          return { ...state, profiles: [], activeProfileId: null };
+        }
+        return state;
+      },
       // pickerOpen and manageOpen are session UI state, never persisted
       partialize: (state) => ({
         profiles: state.profiles,
@@ -121,7 +140,21 @@ export const useProfileStore = create<ProfileState>()(
   ),
 );
 
-// the gate opens on launch only when there is a real choice to make
-if (useProfileStore.getState().profiles.length > 1) {
-  useProfileStore.setState({ pickerOpen: true });
+// First-run decisions: an existing owner (legacy data present) keeps the
+// Hamza profile bound to those records; everyone else starts empty and
+// creates their own profile through the gate.
+{
+  const state = useProfileStore.getState();
+  const hasHamzaData =
+    localStorage.getItem("cryonex-store::hamza") !== null ||
+    localStorage.getItem("cryonex-search-history::hamza") !== null;
+  if (state.profiles.length === 0 && hasHamzaData) {
+    useProfileStore.setState({
+      profiles: [{ id: "hamza", name: "Hamza", color: "crimson" }],
+      activeProfileId: "hamza",
+      pickerOpen: false,
+    });
+  } else if (state.profiles.length === 0 || state.profiles.length > 1) {
+    useProfileStore.setState({ pickerOpen: true });
+  }
 }
