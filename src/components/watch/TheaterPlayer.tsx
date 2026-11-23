@@ -55,12 +55,15 @@ export default function TheaterPlayer({
             exit={{ opacity: 0, transition: { duration: 0.25, ease: EASE } }}
             className="absolute inset-0"
           >
-            {/* the Tauri layer already denies popups, a sandbox would break provider embeds */}
+            {/* sandbox keeps scripts/HLS working while forbidding popups,
+                top-level redirects, and modal ad traps that embeds attempt */}
             <iframe
               src={src}
               title={frameTitle}
               referrerPolicy="no-referrer"
               allowFullScreen
+              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock"
+              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               onLoad={() => setLoadedSrc(src)}
               className="h-full w-full border-0"
             />

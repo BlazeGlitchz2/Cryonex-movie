@@ -906,7 +906,8 @@ function DetailOverlay({
                       key={trailerFrameKey}
                       src={trailerSrc}
                       title="Trailer"
-                      allow="autoplay; encrypted-media"
+                      allow="autoplay; encrypted-media; fullscreen"
+                      sandbox="allow-scripts allow-same-origin allow-presentation"
                       className="h-full w-full scale-[1.15]"
                     />
                   </motion.div>

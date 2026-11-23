@@ -52,7 +52,13 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
         "*allmyverygreatlife.com", "*mygoodlives.com", "*find-my-great-life.com",
         "*totogetica.com", "*togenron.com", "*stremanp.com", "*vidcpm.com",
         "*dadspms.com", "*ehu96t2p.com", "*inabsolor.com", "*ie8eamus.com",
-        "*bestvideo2019.xyz", "*fingahvf.top", "*mc.yandex.ru"
+        "*bestvideo2019.xyz", "*fingahvf.top", "*mc.yandex.ru",
+        "*scorecardresearch.com", "*quantserve.com", "*adsafeprotected.com",
+        "*doubleverify.com", "*ezoic.net", "*ezoic.com", "*pubfuture.com",
+        "*bidvertiser.com", "*adpushup.com", "*setupad.com", "*infolinks.com",
+        "*tsyndicate.com", "*trafficstars.com", "*adspyglass.com",
+        "*clickaine.com", "*pushcrew.com", "*pushengage.com", "*pushnami.com",
+        "*onesignal.com", "*izooto.com"
       ]
     },
     "action": { "type": "block" }
@@ -82,6 +88,30 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
     "action": { "type": "block" }
   },
   {
+    "trigger": { "url-filter": "vast" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "adzone" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "adframe" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "ad_iframe" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "/preroll" },
+    "action": { "type": "block" }
+  },
+  {
+    "trigger": { "url-filter": "adsbygoogle" },
+    "action": { "type": "block" }
+  },
+  {
     "trigger": {
       "url-filter": ".*",
       "if-domain": [
@@ -99,7 +129,7 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
     },
     "action": {
       "type": "css-display-none",
-      "selector": ".ad-overlay,[id*='ad-overlay'],[class*='ad-banner'],[id^='ads_'],.popup-ad,[id*='popunder']"
+      "selector": ".ad-overlay,[id*='ad-overlay'],[class*='ad-banner'],[id^='ads_'],.popup-ad,[id*='popunder'],[class*='advert'],[id*='advert'],[class*='ad-slot'],[class*='ad-wrapper'],[class*='google-ad'],.adsbygoogle,[class*='sponsor']"
     }
   }
 ]"#;
