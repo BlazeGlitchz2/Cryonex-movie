@@ -8,13 +8,20 @@ interface TheaterPlayerProps {
   frameTitle: string;
   ambientColor: string | null;
   dimmed: boolean;
+  // default true: sandbox keeps popups, top-level redirects and modal ad
+  // traps blocked. Per-provider opt-out for sources that refuse to play.
+  sandboxed: boolean;
 }
+
+const SANDBOX_FLAGS =
+  "allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock";
 
 export default function TheaterPlayer({
   src,
   frameTitle,
   ambientColor,
   dimmed,
+  sandboxed,
 }: TheaterPlayerProps) {
   const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
@@ -56,13 +63,14 @@ export default function TheaterPlayer({
             className="absolute inset-0"
           >
             {/* sandbox keeps scripts/HLS working while forbidding popups,
-                top-level redirects, and modal ad traps that embeds attempt */}
+                top-level redirects, and modal ad traps that embeds attempt;
+                a sandbox-bypass source drops it entirely, flagged in Sources */}
             <iframe
               src={src}
               title={frameTitle}
               referrerPolicy="no-referrer"
               allowFullScreen
-              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock"
+              sandbox={sandboxed ? SANDBOX_FLAGS : undefined}
               allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
               onLoad={() => setLoadedSrc(src)}
               className="h-full w-full border-0"

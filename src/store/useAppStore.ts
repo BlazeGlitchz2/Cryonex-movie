@@ -295,19 +295,24 @@ export const useAppStore = create<AppState>()(
         setItem,
         removeItem,
       })),
-      version: 4,
+      version: 5,
       migrate: (persisted) => {
         const state = persisted as Partial<AppState> | undefined;
         if (!state?.providers) {
           return state as AppState;
         }
-        // merge in default providers added after the stored state was written
+        // merge in default providers added after the stored state was written,
+        // and fill the sandbox flag for records written before it existed
         const missing = DEFAULT_PROVIDERS.filter(
           (def) => !state.providers?.some((p) => p.id === def.id),
         );
+        const providers = [...state.providers, ...missing].map((p) => ({
+          ...p,
+          sandboxBypass: p.sandboxBypass ?? false,
+        }));
         return {
           ...state,
-          providers: [...state.providers, ...missing],
+          providers,
         } as AppState;
       },
       partialize: (state) => ({

@@ -251,6 +251,7 @@ export default function WatchPage() {
             frameTitle={frameTitle}
             ambientColor={ambientColor}
             dimmed={cinemaDim}
+            sandboxed={!(activeProvider.sandboxBypass ?? false)}
           />
         ) : (
           <div className="material-card flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-hero text-center">

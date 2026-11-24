@@ -8,7 +8,7 @@ import {
   Monitor,
   Plus,
   Search,
-  Server,
+  Settings2,
   Users,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -91,7 +91,6 @@ function GroupLabel({ children }: { children: string }) {
 
 export function Sidebar() {
   const setCommandOpen = useUIStore((state) => state.setCommandOpen);
-  const setSourcesOpen = useUIStore((state) => state.setSourcesOpen);
   const setPickerOpen = useProfileStore((state) => state.setPickerOpen);
   const windowGlass = useAppearanceStore((state) => state.windowGlass);
 
@@ -144,14 +143,37 @@ export function Sidebar() {
           ))}
         </div>
         <div className="mx-0.5 my-3 h-px bg-hairline" aria-hidden="true" />
-        <button
-          type="button"
-          onClick={() => setSourcesOpen(true)}
-          className="flex min-h-11 w-full items-center gap-3 rounded-full px-3.5 text-sm text-ink-dim transition-colors duration-250 ease-in-out hover:bg-white/[0.05] hover:text-ink"
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `group relative flex min-h-11 items-center gap-3 rounded-full px-3.5 text-sm outline-offset-0 transition-colors duration-250 ease-in-out ${
+              isActive
+                ? "text-white"
+                : "text-ink-dim hover:bg-white/[0.05] hover:text-ink"
+            }`
+          }
         >
-          <Server size={18} aria-hidden="true" className="shrink-0" />
-          <span className="truncate">Servers &amp; Sources</span>
-        </button>
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <motion.span
+                  layoutId="side-active"
+                  transition={{ type: "spring", stiffness: 180, damping: 24 }}
+                  className="absolute inset-0 rounded-full bg-white/[0.11]"
+                  aria-hidden="true"
+                />
+              )}
+              <Settings2
+                size={18}
+                aria-hidden="true"
+                className={`relative shrink-0 transition-colors duration-250 ease-in-out ${
+                  isActive ? "fill-current" : "group-hover:text-ink"
+                }`}
+              />
+              <span className="relative truncate">Settings</span>
+            </>
+          )}
+        </NavLink>
       </nav>
 
       <div className="mt-auto px-5 pb-5">

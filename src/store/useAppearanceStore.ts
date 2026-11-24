@@ -1,6 +1,21 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+// owner-requested wallpaper presets; every palette stays inside the
+// design system (emerald accent, warm white ink, profile hues as light)
+export type AmbientPreset = "off" | "projector" | "aurora" | "ember" | "spotlight";
+
+export const AMBIENT_PRESETS: {
+  id: AmbientPreset;
+  label: string;
+}[] = [
+  { id: "off", label: "Off" },
+  { id: "projector", label: "Projector" },
+  { id: "aurora", label: "Aurora" },
+  { id: "ember", label: "Ember" },
+  { id: "spotlight", label: "Spotlight" },
+];
+
 interface AppearanceState {
   glass: boolean;
   setGlass: (v: boolean) => void;
@@ -8,8 +23,8 @@ interface AppearanceState {
   windowGlass: boolean;
   setWindowGlass: (v: boolean) => void;
   toggleWindowGlass: () => void;
-  ambientBackdrop: boolean;
-  setAmbientBackdrop: (v: boolean) => void;
+  ambientBackdrop: AmbientPreset;
+  setAmbientBackdrop: (v: AmbientPreset) => void;
 }
 
 export const useAppearanceStore = create<AppearanceState>()(
@@ -22,18 +37,28 @@ export const useAppearanceStore = create<AppearanceState>()(
       windowGlass: true,
       setWindowGlass: (v) => set({ windowGlass: v }),
       toggleWindowGlass: () => set((s) => ({ windowGlass: !s.windowGlass })),
-      // default on: owner-requested projector haze behind the window glass
-      ambientBackdrop: true,
+      // default projector: owner-requested drifting light behind the glass
+      ambientBackdrop: "projector",
       setAmbientBackdrop: (v) => set({ ambientBackdrop: v }),
     }),
     {
       name: "cryonex-appearance",
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
-        const state = (persisted ?? {}) as Partial<AppearanceState>;
-        if (version < 2) {
-          // one-time flip: window glass is the design now, old stored false never returns
-          return { ...state, windowGlass: true } as AppearanceState;
+        const state = (persisted ?? {}) as Partial<AppearanceState> & {
+          ambientBackdrop?: boolean | AmbientPreset;
+        };
+        if (version < 3) {
+          // v2 stored a boolean; true becomes the projector preset
+          return {
+            ...state,
+            ambientBackdrop:
+              typeof state.ambientBackdrop === "string"
+                ? state.ambientBackdrop
+                : state.ambientBackdrop === false
+                  ? "off"
+                  : "projector",
+          } as AppearanceState;
         }
         return state as AppearanceState;
       },

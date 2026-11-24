@@ -13,10 +13,9 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { useAppStore } from "../../store/useAppStore";
-import { useAppearanceStore } from "../../store/useAppearanceStore";
-import { useToastStore } from "../../store/useToastStore";
 import { useUIStore } from "../../store/useUIStore";
 import type { StreamProvider } from "../../types/media";
+import Switch from "./Switch";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
@@ -47,6 +46,7 @@ interface ProviderFormValues {
   badge: string;
   movieTemplate: string;
   tvTemplate: string;
+  sandboxBypass: boolean;
 }
 
 function validate(values: ProviderFormValues) {
@@ -112,6 +112,7 @@ function ProviderForm({
       badge: values.badge.trim(),
       movieTemplate: values.movieTemplate.trim(),
       tvTemplate: values.tvTemplate.trim(),
+      sandboxBypass: values.sandboxBypass,
     });
   };
 
@@ -192,6 +193,25 @@ function ProviderForm({
           <p className="mt-1 text-xs text-ink">{errors.tvTemplate}</p>
         )}
       </div>
+      <div className="rounded-ctl border border-hairline bg-surface/50 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-ink-dim">Run without sandbox</span>
+          <Switch
+            checked={values.sandboxBypass}
+            label="Run without sandbox"
+            onToggle={() =>
+              setValues((prev) => ({
+                ...prev,
+                sandboxBypass: !prev.sandboxBypass,
+              }))
+            }
+          />
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-ink-dim">
+          Only for sources that refuse to play. Popups and redirects become
+          possible while this is on.
+        </p>
+      </div>
       <div className="flex items-center gap-2">
         <button
           type="submit"
@@ -212,87 +232,6 @@ function ProviderForm({
         )}
       </div>
     </form>
-  );
-}
-
-function DestructiveRow({
-  label,
-  description,
-  disabled,
-  onConfirm,
-}: {
-  label: string;
-  description: string;
-  disabled: boolean;
-  onConfirm: () => void;
-}) {
-  const [armed, setArmed] = useState(false);
-
-  useEffect(() => {
-    if (!armed) {
-      return;
-    }
-    // confirm state is a real destructive intent, so it expires on its own
-    const timer = setTimeout(() => setArmed(false), 4000);
-    return () => clearTimeout(timer);
-  }, [armed]);
-
-  return (
-    <div className="flex items-center justify-between gap-3 py-3">
-      <div className="min-w-0">
-        <p className="text-sm text-ink">{label}</p>
-        <p className="mt-0.5 text-xs text-ink-dim">{description}</p>
-      </div>
-      <button
-        type="button"
-        disabled={disabled}
-        aria-label={armed ? `Confirm ${label.toLowerCase()}` : label}
-        onClick={() => {
-          if (armed) {
-            setArmed(false);
-            onConfirm();
-            return;
-          }
-          setArmed(true);
-        }}
-        className={`shrink-0 rounded-ctl border px-3 py-1.5 text-sm transition-colors duration-[250ms] ease-in-out disabled:cursor-not-allowed disabled:opacity-40 max-lg:min-h-11 ${
-          armed
-            ? "border-red-400/40 text-red-400"
-            : "border-hairline text-ink-dim hover:bg-surface-2 hover:text-ink"
-        }`}
-      >
-        {armed ? "Confirm" : "Clear"}
-      </button>
-    </div>
-  );
-}
-
-function Switch({
-  checked,
-  label,
-  onToggle,
-}: {
-  checked: boolean;
-  label: string;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={onToggle}
-      className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors duration-[250ms] ease-in-out max-lg:h-11 max-lg:w-16 ${
-        checked ? "bg-accent" : "bg-white/10"
-      }`}
-    >
-      <span
-        className={`h-5 w-5 rounded-full transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] max-lg:h-9 max-lg:w-9 ${
-          checked ? "translate-x-5 max-lg:translate-x-6 bg-canvas" : "translate-x-0 bg-white"
-        }`}
-      />
-    </button>
   );
 }
 
@@ -348,6 +287,12 @@ function ProviderRow({
             {provider.badge && (
               <span className="rounded-full bg-white/[0.07] px-2 py-0.5 text-[11px] text-ink-dim">
                 {provider.badge}
+              </span>
+            )}
+            {provider.sandboxBypass && (
+              // honest marker: this source opted out of the popup shield
+              <span className="rounded-full border border-hairline px-2 py-0.5 text-[11px] text-ink-dim">
+                no sandbox
               </span>
             )}
           </div>
@@ -438,6 +383,7 @@ function ProviderRow({
               badge: provider.badge ?? "",
               movieTemplate: provider.movieTemplate,
               tvTemplate: provider.tvTemplate,
+              sandboxBypass: provider.sandboxBypass ?? false,
             }}
             submitLabel="Save"
             onSubmit={(values) => onSave(provider.id, values)}
@@ -466,23 +412,6 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
   );
   const moveProvider = useAppStore((state) => state.moveProvider);
   const setActiveProvider = useAppStore((state) => state.setActiveProvider);
-  const watchlist = useAppStore((state) => state.watchlist);
-  const continueWatching = useAppStore((state) => state.continueWatching);
-  const removeFromWatchlist = useAppStore(
-    (state) => state.removeFromWatchlist,
-  );
-  const removeFromContinueWatching = useAppStore(
-    (state) => state.removeFromContinueWatching,
-  );
-  const pushToast = useToastStore((state) => state.pushToast);
-  const glass = useAppearanceStore((state) => state.glass);
-  const setGlass = useAppearanceStore((state) => state.setGlass);
-  const windowGlass = useAppearanceStore((state) => state.windowGlass);
-  const setWindowGlass = useAppearanceStore((state) => state.setWindowGlass);
-  const ambientBackdrop = useAppearanceStore((state) => state.ambientBackdrop);
-  const setAmbientBackdrop = useAppearanceStore(
-    (state) => state.setAmbientBackdrop,
-  );
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [armedRemoveId, setArmedRemoveId] = useState<string | null>(null);
@@ -551,6 +480,7 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
       movieTemplate: values.movieTemplate,
       tvTemplate: values.tvTemplate,
       enabled: true,
+      sandboxBypass: values.sandboxBypass,
     });
     setAddFormKey((key) => key + 1);
   };
@@ -561,6 +491,7 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
       badge: values.badge || null,
       movieTemplate: values.movieTemplate,
       tvTemplate: values.tvTemplate,
+      sandboxBypass: values.sandboxBypass,
     });
     setEditingId(null);
   };
@@ -680,113 +611,10 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
                   badge: "",
                   movieTemplate: "",
                   tvTemplate: "",
+                  sandboxBypass: false,
                 }}
                 submitLabel="Add source"
                 onSubmit={submitAdd}
-              />
-            </div>
-          </div>
-          <div className="mt-4 border-t border-hairline pt-4">
-            <h3 className="font-display text-sm font-semibold text-ink">
-              Your data
-            </h3>
-            <div className="mt-2 divide-y divide-hairline">
-              <DestructiveRow
-                label="Clear continue watching"
-                description={
-                  continueWatching.length > 0
-                    ? `${continueWatching.length} titles in progress.`
-                    : "Nothing in progress."
-                }
-                disabled={continueWatching.length === 0}
-                onConfirm={() => {
-                  // only single-item removal exists in the store, loop is fine at personal scale
-                  continueWatching.forEach((entry) =>
-                    removeFromContinueWatching(entry.id, entry.mediaType),
-                  );
-                  pushToast({
-                    title: "Continue watching cleared",
-                    tone: "success",
-                  });
-                }}
-              />
-              <DestructiveRow
-                label="Clear watchlist"
-                description={
-                  watchlist.length > 0
-                    ? `${watchlist.length} titles saved.`
-                    : "Nothing saved yet."
-                }
-                disabled={watchlist.length === 0}
-                onConfirm={() => {
-                  watchlist.forEach((entry) =>
-                    removeFromWatchlist(entry.id, entry.mediaType),
-                  );
-                  pushToast({ title: "Watchlist cleared", tone: "success" });
-                }}
-              />
-            </div>
-          </div>
-          <div className="mt-4 border-t border-hairline pt-4">
-            <h3 className="font-display text-sm font-semibold text-ink">
-              Appearance
-            </h3>
-            <div className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="text-sm text-ink">Glass surfaces</p>
-                <p className="mt-0.5 text-xs text-ink-dim">
-                  Translucent frosted panels across the app
-                </p>
-              </div>
-              <Switch
-                checked={glass}
-                label="Glass surfaces"
-                onToggle={() => {
-                  setGlass(!glass);
-                  pushToast({
-                    title: !glass ? "Glass surfaces on" : "Glass surfaces off",
-                  });
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="text-sm text-ink">Desktop window</p>
-                <p className="mt-0.5 text-xs text-ink-dim">
-                  The whole window turns frosted glass over your desktop
-                </p>
-              </div>
-              <Switch
-                checked={windowGlass}
-                label="Desktop window"
-                onToggle={() => {
-                  setWindowGlass(!windowGlass);
-                  pushToast({
-                    title: !windowGlass
-                      ? "Desktop glass on"
-                      : "Desktop glass off",
-                  });
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="text-sm text-ink">Ambient backdrop</p>
-                <p className="mt-0.5 text-xs text-ink-dim">
-                  Slow projector light drifts behind the window glass
-                </p>
-              </div>
-              <Switch
-                checked={ambientBackdrop}
-                label="Ambient backdrop"
-                onToggle={() => {
-                  setAmbientBackdrop(!ambientBackdrop);
-                  pushToast({
-                    title: !ambientBackdrop
-                      ? "Ambient backdrop on"
-                      : "Ambient backdrop off",
-                  });
-                }}
               />
             </div>
           </div>

@@ -101,6 +101,9 @@ export interface StreamProvider {
   movieTemplate: string;
   tvTemplate: string;
   enabled: boolean;
+  // default false: the sandbox stays on so popups and redirects stay blocked.
+  // Opt out only for sources that refuse to play inside the sandbox.
+  sandboxBypass?: boolean;
 }
 
 export const buildProviderUrl = (

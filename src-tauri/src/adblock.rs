@@ -58,7 +58,13 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
         "*bidvertiser.com", "*adpushup.com", "*setupad.com", "*infolinks.com",
         "*tsyndicate.com", "*trafficstars.com", "*adspyglass.com",
         "*clickaine.com", "*pushcrew.com", "*pushengage.com", "*pushnami.com",
-        "*onesignal.com", "*izooto.com"
+        "*onesignal.com", "*izooto.com",
+        "*advertising.com", "*adtechus.com", "*adtech.de", "*adition.com",
+        "*galaksion.com", "*adskeeper.co.uk", "*realsrv.com", "*exosrv.com",
+        "*comscore.com", "*bebi.com", "*bebi.net", "*zedo.com", "*megapu.sh",
+        "*adnium.com", "*trafficjunky.com", "*a-ads.com",
+        "*smartyads.com", "*adpone.com", "*admatic.com.tr", "*admatic.io",
+        "*coinzilla.com", "*bitmedia.io", "*a-ads.net"
       ]
     },
     "action": { "type": "block" }
@@ -108,6 +114,10 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
     "action": { "type": "block" }
   },
   {
+    "trigger": { "url-filter": "pagead" },
+    "action": { "type": "block" }
+  },
+  {
     "trigger": { "url-filter": "adsbygoogle" },
     "action": { "type": "block" }
   },
@@ -122,14 +132,19 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
         "*vidora.su",
         "*vidsrc.to",
         "*vidsrc.net",
+        "*vidsrc.me",
+        "*vidsrc.pm",
         "*vidlink.pro",
         "*2embed.cc",
-        "*vidfast.vc"
+        "*vidfast.vc",
+        "*vixsrc.to",
+        "*vidrock.net",
+        "*multiembed.mov"
       ]
     },
     "action": {
       "type": "css-display-none",
-      "selector": ".ad-overlay,[id*='ad-overlay'],[class*='ad-banner'],[id^='ads_'],.popup-ad,[id*='popunder'],[class*='advert'],[id*='advert'],[class*='ad-slot'],[class*='ad-wrapper'],[class*='google-ad'],.adsbygoogle,[class*='sponsor']"
+      "selector": ".ad-overlay,[id*='ad-overlay'],[class*='ad-banner'],[id^='ads_'],.popup-ad,[id*='popunder'],[class*='advert'],[id*='advert'],[class*='ad-slot'],[class*='ad-wrapper'],[class*='ad-container'],[id*='adContainer'],[class*='adbox'],[class*='ad_box'],[class*='google-ad'],.adsbygoogle,[class*='sponsor'],[class*='vast'],[id*='vast'],[id*='popad'],[class*='pop-ad'],iframe[src*='doubleclick'],iframe[src*='googlesyndication'],iframe[src*='/ads/'],iframe[src*='adserver'],iframe[src*='exoclick'],iframe[src*='juicyads'],iframe[src*='propeller']"
     }
   }
 ]"#;

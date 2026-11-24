@@ -22,6 +22,7 @@ const MoviesPage = lazy(() => import("./pages/MoviesPage"));
 const MyListPage = lazy(() => import("./pages/MyListPage"));
 const NewAndPopularPage = lazy(() => import("./pages/NewAndPopularPage"));
 const SeriesPage = lazy(() => import("./pages/SeriesPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const WatchPage = lazy(() => import("./pages/WatchPage"));
 
 const queryClient = new QueryClient({
@@ -156,6 +157,7 @@ function RoutedApp() {
                     path="/continue"
                     element={<ContinueWatchingPage />}
                   />
+                  <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/watch/movie/:id" element={<WatchPage />} />
                   <Route path="/watch/tv/:id" element={<WatchPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />

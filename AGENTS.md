@@ -146,10 +146,15 @@ State and actions:
   `setActiveProvider(id: string)`
 - `cinemaDim: boolean` (not persisted), `toggleCinemaDim()`
 
-Videasy is dead (DNS) and must not be re-added. The sixteen verified
-providers above are the complete set (R-17 honesty decision, see
-DESIGN.md). Bump the store `version` whenever DEFAULT_PROVIDERS grows, so
-existing persisted records merge the new entries through `migrate`.
+  Videasy is dead (DNS) and must not be re-added. The sixteen verified
+  providers above are the complete set (R-17 honesty decision, see
+  DESIGN.md). Bump the store `version` whenever DEFAULT_PROVIDERS grows,
+  so existing persisted records merge the new entries through `migrate`.
+  Store version 5 also backfills `sandboxBypass: boolean` (default
+  false) on every stored provider. `sandboxBypass` opts one source out
+  of the theater iframe sandbox; WatchPage passes it to TheaterPlayer,
+  the Sources edit form owns the toggle with warning copy, and the row
+  shows an honest "no sandbox" chip while it is on.
 
 ### UI store (`src/store/useUIStore.ts`)
 
@@ -160,8 +165,9 @@ Not persisted. `commandOpen: boolean`, `sourcesOpen: boolean`,
 command palette if open), `closeDetail(): void`.
 
 Sidebar and TopBar call `setCommandOpen(true)`, `setSourcesOpen(true)`,
-`setActiveProvider(id)`; there is no Settings destination outside the
-Sources modal (one place for appearance and data, no dupes).
+`setActiveProvider(id)`; the Settings page owns appearance and data
+sections, the Sources modal owns providers only, and nothing duplicates
+the other's section.
 
 ### Appearance store (`src/store/useAppearanceStore.ts`)
 
@@ -174,11 +180,12 @@ App sets `data-window-glass="true"` on the html element and the
 index.css token overrides turn the canvas translucent (alpha 0.6) over
 the native macOS under-window blur. The window itself is transparent
 with `underWindowBackground` effects chained in `src-tauri/src/lib.rs`.
-`ambientBackdrop: boolean` (default TRUE, owner-requested): slow
-emerald and warm-white projector drift behind the glass, rendered by
+`ambientBackdrop: AmbientPreset` (default "projector", owner-requested):
+"off" | "projector" | "aurora" | "ember" | "spotlight", version 3
+migrate maps the old boolean. Rendered by
 `src/components/shell/AmbientBackdrop.tsx` (lg and up only, transform
 keyframes in index.css, frozen by the global reduced-motion kill).
-Toggle lives in the Sources modal Appearance section with the others.
+The Settings page owns the picker; Sources modal never shows appearance.
 
 ### Button grammar
 
@@ -261,6 +268,7 @@ is no kids mode and no maturity filter in this app.
 - `/series` Series
 - `/my-list` My List (`?sort=recent` = Recently Added view)
 - `/continue` Continue Watching
+- `/settings` Settings (appearance, sources entry, data, about)
 - `/watch/movie/:id` movie theater
 - `/watch/tv/:id?season=N&episode=M` episode theater
 

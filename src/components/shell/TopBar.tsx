@@ -1,6 +1,6 @@
 import { Check, ChevronDown, ChevronRight, Pencil, Settings2, UserRound } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
 import {
   GUEST_ID,
@@ -20,6 +20,7 @@ const SECTION_BY_PATH: Record<string, string> = {
   "/movies": "Movies",
   "/my-list": "My List",
   "/continue": "Continue Watching",
+  "/settings": "Settings",
 };
 
 function sectionFor(pathname: string): string {
@@ -44,6 +45,7 @@ function sectionLabelFor(pathname: string): string | null {
 
 export function TopBar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const providers = useAppStore((state) => state.providers);
   const activeProviderId = useAppStore((state) => state.activeProviderId);
   const setActiveProvider = useAppStore((state) => state.setActiveProvider);
@@ -121,6 +123,15 @@ export function TopBar() {
       </h1>
 
       <div className="flex shrink-0 items-center gap-3">
+        {/* desktop reaches Settings through the sidebar, touch needs a top entry */}
+        <button
+          type="button"
+          onClick={() => navigate("/settings")}
+          aria-label="Open settings"
+          className="hidden min-h-11 min-w-11 place-items-center rounded-full text-ink-dim transition-colors duration-250 ease-in-out hover:bg-white/[0.06] hover:text-ink lg:hidden"
+        >
+          <Settings2 size={20} aria-hidden="true" />
+        </button>
         <div className="relative hidden lg:block">
           <button
             ref={triggerRef}
