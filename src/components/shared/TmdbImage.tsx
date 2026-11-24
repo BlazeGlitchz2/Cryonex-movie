@@ -25,7 +25,6 @@ export function TmdbImage({
   className,
   width,
   height,
-  eager = false,
   fetchPriority,
 }: TmdbImageProps) {
   // a poster that fails at a large size gets one more chance at w500:
@@ -33,56 +32,21 @@ export function TmdbImage({
   const [downgraded, setDowngraded] = useState(false);
   const base =
     src ?? (path ? tmdbImageUrl(path, downgraded ? "w500" : size) : null);
-  // logos have no intrinsic size, so a zero-area box would never intersect
-  const eagerLoad = eager || width === undefined || height === undefined;
-  const imgRef = useRef<HTMLImageElement>(null);
   const retryTimer = useRef<number | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const [visible, setVisible] = useState(eagerLoad);
   const [failed, setFailed] = useState(false);
 
+  // every image loads immediately. The old viewport observer deferral
+  // misbehaved inside the app webview: row art only appeared after a
+  // hover transform jogged the scroller, then churned through the retry
+  // ladder. Posters are small CDN files; eager beats clever here.
   useEffect(() => {
-    if (visible || !base) {
-      return;
-    }
-    const node = imgRef.current;
-    if (!node || typeof IntersectionObserver === "undefined") {
-      setVisible(true);
-      return;
-    }
-    // native lazy loading leaves images inside nested scrollers blank in
-    // WebKit, so the viewport observer decides instead. The horizontal
-    // margin is deliberately huge: poster rows are 2000px+ wide and the
-    // owner must not hover a card to coax its art into existence.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "600px 2400px" },
-    );
-    observer.observe(node);
-    // safety net: if the observer never fires (edge cases inside nested
-    // scrollers), show the image anyway rather than leave a blank frame
-    const failsafe = window.setTimeout(() => setVisible(true), 4000);
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(failsafe);
-    };
-  }, [visible, base]);
-
-  useEffect(() => {
-    if (downgraded) {
-      return;
-    }
     return () => {
       if (retryTimer.current !== null) {
         window.clearTimeout(retryTimer.current);
       }
     };
-  }, [downgraded]);
+  }, []);
 
   // a failed poster gets another chance when the network or the tab returns
   useEffect(() => {
@@ -136,13 +100,13 @@ export function TmdbImage({
 
   return (
     <img
-      ref={imgRef}
-      src={visible ? resolved : undefined}
+      src={resolved}
       alt={alt}
       width={width}
       height={height}
       fetchPriority={fetchPriority}
       decoding="async"
+      draggable={false}
       onError={() => {
         if (attempt < IMAGE_RETRY_DELAYS.length && retryTimer.current === null) {
           retryTimer.current = window.setTimeout(() => {

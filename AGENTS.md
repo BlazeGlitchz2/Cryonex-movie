@@ -300,10 +300,11 @@ Navigate with `react-router-dom`. Never hardcode URLs outside these.
   shimmer while loading, honest error text on failure.
 - `src/components/shared/TmdbImage.tsx`: `TmdbImage({ path | src, size,
   alt, className, width, height, eager?, fetchPriority? })`. Every TMDB
-  artwork goes through it: viewport observer instead of native
-  `loading="lazy"` (WebKit leaves nested-scroller images blank), two
-  retries with a cache-busting query, then hidden. Pass `width` and
-  `height` so the observer can gate it; size-less logos load eagerly.
+  artwork goes through it. Images load EAGERLY, no observer and no
+  native `loading="lazy"` (both left row art blank in the app webview
+  until a hover transform jogged it); two retries with a cache-busting
+  query, one downgrade to w500 for large sizes, then an honest
+  placeholder. Pass `width` and `height` so layout holds before decode.
 - `src/components/shared/TrailerModal.tsx`: `TrailerModal({ videoKey: string
   | null, title: string, onClose: () => void })`, YouTube embed, Escape
   closes, focus trapped on open.
