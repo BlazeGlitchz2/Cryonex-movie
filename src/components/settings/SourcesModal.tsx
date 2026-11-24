@@ -479,6 +479,10 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
   const setGlass = useAppearanceStore((state) => state.setGlass);
   const windowGlass = useAppearanceStore((state) => state.windowGlass);
   const setWindowGlass = useAppearanceStore((state) => state.setWindowGlass);
+  const ambientBackdrop = useAppearanceStore((state) => state.ambientBackdrop);
+  const setAmbientBackdrop = useAppearanceStore(
+    (state) => state.setAmbientBackdrop,
+  );
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [armedRemoveId, setArmedRemoveId] = useState<string | null>(null);
@@ -761,6 +765,26 @@ function SourcesPanel({ onClose }: { onClose: () => void }) {
                     title: !windowGlass
                       ? "Desktop glass on"
                       : "Desktop glass off",
+                  });
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="text-sm text-ink">Ambient backdrop</p>
+                <p className="mt-0.5 text-xs text-ink-dim">
+                  Slow projector light drifts behind the window glass
+                </p>
+              </div>
+              <Switch
+                checked={ambientBackdrop}
+                label="Ambient backdrop"
+                onToggle={() => {
+                  setAmbientBackdrop(!ambientBackdrop);
+                  pushToast({
+                    title: !ambientBackdrop
+                      ? "Ambient backdrop on"
+                      : "Ambient backdrop off",
                   });
                 }}
               />

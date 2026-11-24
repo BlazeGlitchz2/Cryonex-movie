@@ -26,6 +26,13 @@ export function profileInitialInk(color: ProfileColor): string {
   return color === "amber" ? "#121312" : "#FFFFFF";
 }
 
+// tiles stay honest (initial, no artwork) but carry light like the glass
+// materials: one hue, three stops, no second color introduced
+export function profileTileBackground(color: ProfileColor): string {
+  const hex = PROFILE_HEX[color];
+  return `linear-gradient(150deg, color-mix(in srgb, ${hex} 68%, #ffffff) 0%, ${hex} 52%, color-mix(in srgb, ${hex} 72%, #000000) 100%)`;
+}
+
 export function profileInitial(name: string): string {
   const trimmed = name.trim();
   return trimmed ? trimmed.charAt(0).toUpperCase() : "?";

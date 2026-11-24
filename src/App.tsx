@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { MiniPlayerDock } from "./components/dock/MiniPlayerDock";
+import { AmbientBackdrop } from "./components/shell/AmbientBackdrop";
 import { AppShell } from "./components/shell/AppShell";
 import CommandPalette from "./components/search/CommandPalette";
 import SourcesModal from "./components/settings/SourcesModal";
@@ -120,6 +121,7 @@ function RoutedApp() {
 
   return (
     <>
+      <AmbientBackdrop />
       <ScrollToTop />
       <DeepLinkHandler />
       <AppShell>

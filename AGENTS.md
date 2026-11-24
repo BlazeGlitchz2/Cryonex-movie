@@ -174,6 +174,11 @@ App sets `data-window-glass="true"` on the html element and the
 index.css token overrides turn the canvas translucent (alpha 0.6) over
 the native macOS under-window blur. The window itself is transparent
 with `underWindowBackground` effects chained in `src-tauri/src/lib.rs`.
+`ambientBackdrop: boolean` (default TRUE, owner-requested): slow
+emerald and warm-white projector drift behind the glass, rendered by
+`src/components/shell/AmbientBackdrop.tsx` (lg and up only, transform
+keyframes in index.css, frozen by the global reduced-motion kill).
+Toggle lives in the Sources modal Appearance section with the others.
 
 ### Button grammar
 
@@ -243,8 +248,10 @@ SourcesModal chassis (scrim, focus trap, canvas scroll lock) and allows
 add, rename, color change and two-step delete only.
 
 Honest scope cuts: avatars are colored tiles with the profile initial,
-not character artwork; there is no kids mode and no maturity filter in
-this app.
+not character artwork; the tile carries light through
+`profileTileBackground` (one hue, color-mix stops, inner shadow) and
+live `readProfileStats` counts on the gate and manage surfaces; there
+is no kids mode and no maturity filter in this app.
 
 ### Routes
 

@@ -51,3 +51,30 @@ export function switchProfile(id: string): void {
   useProfileStore.getState().setActiveProfile(id);
   rehydrateForActiveProfile();
 }
+
+// live per-profile counts for the profile tiles; reads the namespaced
+// records directly because only the active profile is held in memory
+export function readProfileStats(profileId: string): {
+  saved: number;
+  watching: number;
+} {
+  try {
+    const raw = localStorage.getItem(`cryonex-store::${profileId}`);
+    if (raw === null) {
+      return { saved: 0, watching: 0 };
+    }
+    const persisted = JSON.parse(raw) as {
+      state?: { watchlist?: unknown; continueWatching?: unknown };
+    };
+    return {
+      saved: Array.isArray(persisted.state?.watchlist)
+        ? persisted.state.watchlist.length
+        : 0,
+      watching: Array.isArray(persisted.state?.continueWatching)
+        ? persisted.state.continueWatching.length
+        : 0,
+    };
+  } catch {
+    return { saved: 0, watching: 0 };
+  }
+}

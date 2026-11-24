@@ -8,6 +8,8 @@ interface AppearanceState {
   windowGlass: boolean;
   setWindowGlass: (v: boolean) => void;
   toggleWindowGlass: () => void;
+  ambientBackdrop: boolean;
+  setAmbientBackdrop: (v: boolean) => void;
 }
 
 export const useAppearanceStore = create<AppearanceState>()(
@@ -20,6 +22,9 @@ export const useAppearanceStore = create<AppearanceState>()(
       windowGlass: true,
       setWindowGlass: (v) => set({ windowGlass: v }),
       toggleWindowGlass: () => set((s) => ({ windowGlass: !s.windowGlass })),
+      // default on: owner-requested projector haze behind the window glass
+      ambientBackdrop: true,
+      setAmbientBackdrop: (v) => set({ ambientBackdrop: v }),
     }),
     {
       name: "cryonex-appearance",

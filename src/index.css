@@ -224,6 +224,50 @@ html[data-window-glass="true"] {
 }
 
 /*
+  Ambient backdrop: three projector lights drifting behind the window
+  glass. Emerald and warm white only, the palette's own colors. The
+  global reduced-motion kill freezes the drift without hiding the light.
+*/
+@keyframes ambient-drift-a {
+  from {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(7%, 6%, 0) scale(1.18);
+  }
+}
+
+@keyframes ambient-drift-b {
+  from {
+    transform: translate3d(5%, 3%, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(-6%, -5%, 0) scale(0.95);
+  }
+}
+
+@keyframes ambient-drift-c {
+  from {
+    transform: translate3d(0%, 6%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-4%, -3%, 0) scale(1.12);
+  }
+}
+
+.ambient-blob-a {
+  animation: ambient-drift-a 95s ease-in-out infinite alternate;
+}
+
+.ambient-blob-b {
+  animation: ambient-drift-b 120s ease-in-out infinite alternate;
+}
+
+.ambient-blob-c {
+  animation: ambient-drift-c 80s ease-in-out infinite alternate;
+}
+
+/*
   Film grain: the one identity texture of the cinema room.
   Static noise, never animated, 3.5% opacity over everything.
 */

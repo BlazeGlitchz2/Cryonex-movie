@@ -2,12 +2,12 @@ import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { Plus, Users, UserRound } from "lucide-react";
 import { useEffect } from "react";
-import { switchProfile } from "../../services/profileStorage";
+import { readProfileStats, switchProfile } from "../../services/profileStorage";
 import {
   GUEST_ID,
-  PROFILE_HEX,
   profileInitial,
   profileInitialInk,
+  profileTileBackground,
   useProfileStore,
 } from "../../store/useProfileStore";
 import { useToastStore } from "../../store/useToastStore";
@@ -23,6 +23,24 @@ const tileRise: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
 };
+
+// honest counts straight from the profile's own saved record
+function TileStats({ profileId }: { profileId: string }) {
+  const { saved, watching } = readProfileStats(profileId);
+  const parts: string[] = [];
+  if (saved > 0) {
+    parts.push(`${saved} saved`);
+  }
+  if (watching > 0) {
+    parts.push(`${watching} in progress`);
+  }
+  if (parts.length === 0) {
+    return null;
+  }
+  return (
+    <span className="text-xs text-ink-dim">{parts.join(" \u00b7 ")}</span>
+  );
+}
 
 export function WhoIsWatchingGate() {
   const profiles = useProfileStore((state) => state.profiles);
@@ -106,15 +124,16 @@ export function WhoIsWatchingGate() {
           >
             <span
               aria-hidden="true"
-              className="grid size-[120px] place-items-center rounded-[12px] border-2 border-transparent font-display text-4xl font-bold transition-colors duration-[250ms] ease-in-out group-hover:border-white"
+              className="grid size-[120px] place-items-center rounded-[12px] border-2 border-transparent font-display text-4xl font-bold shadow-[inset_0_2px_18px_rgba(0,0,0,0.22)] transition-colors duration-[250ms] ease-in-out group-hover:border-white"
               style={{
-                backgroundColor: PROFILE_HEX[profile.color],
+                background: profileTileBackground(profile.color),
                 color: profileInitialInk(profile.color),
               }}
             >
               {profileInitial(profile.name)}
             </span>
             <span className="text-sm text-ink">{profile.name}</span>
+            <TileStats profileId={profile.id} />
           </motion.button>
           ))
         )}

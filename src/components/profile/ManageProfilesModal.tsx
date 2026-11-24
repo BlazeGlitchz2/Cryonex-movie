@@ -6,21 +6,34 @@ import {
   useId,
   useRef,
   useState,
+  useSyncExternalStore,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { rehydrateForActiveProfile, switchProfile } from "../../services/profileStorage";
+import {
+  readProfileStats,
+  rehydrateForActiveProfile,
+  switchProfile,
+} from "../../services/profileStorage";
 import {
   PROFILE_COLORS,
-  PROFILE_HEX,
   profileInitial,
   profileInitialInk,
+  profileTileBackground,
   useProfileStore,
   type ProfileColor,
 } from "../../store/useProfileStore";
 import { useToastStore } from "../../store/useToastStore";;
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
+
+// AppShell owns the same query; matching it keeps one nav/chrome breakpoint contract
+const DESKTOP_QUERY = window.matchMedia("(min-width: 1024px)");
+
+function subscribeDesktop(onChange: () => void) {
+  DESKTOP_QUERY.addEventListener("change", onChange);
+  return () => DESKTOP_QUERY.removeEventListener("change", onChange);
+}
 
 const gridStagger: Variants = {
   hidden: {},
@@ -31,6 +44,22 @@ const tileRise: Variants = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: EASE } },
 };
+
+// honest counts straight from the profile's own saved record
+function TileStats({ profileId }: { profileId: string }) {
+  const { saved, watching } = readProfileStats(profileId);
+  const parts: string[] = [];
+  if (saved > 0) {
+    parts.push(`${saved} saved`);
+  }
+  if (watching > 0) {
+    parts.push(`${watching} in progress`);
+  }
+  if (parts.length === 0) {
+    return null;
+  }
+  return <span className="text-xs text-ink-dim">{parts.join(" \u00b7 ")}</span>;
+}
 
 type Editing = { id: string } | "new" | null;
 
@@ -80,6 +109,27 @@ function ProfileEditor({
 
   return (
     <form onSubmit={submit} className="space-y-4" noValidate>
+      {/* the tile previews live, so the owner sees exactly what ships */}
+      <div className="flex items-center gap-4">
+        <span
+          aria-hidden="true"
+          className="grid size-20 shrink-0 place-items-center rounded-[12px] font-display text-3xl font-bold shadow-[inset_0_2px_18px_rgba(0,0,0,0.22)]"
+          style={{
+            background: profileTileBackground(color),
+            color: profileInitialInk(color),
+          }}
+        >
+          {profileInitial(trimmed || name)}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-display text-sm font-semibold text-ink">
+            {trimmed || "New profile"}
+          </p>
+          <p className="mt-0.5 text-xs text-ink-dim">
+            Live preview of the tile
+          </p>
+        </div>
+      </div>
       <div>
         <label htmlFor={`${formId}-name`} className="block text-xs text-ink-dim">
           Name
@@ -92,7 +142,7 @@ function ProfileEditor({
           onBlur={() => setTouchedName(true)}
           autoFocus
           placeholder={isNew ? "Example: Sara" : "Example: Hamza"}
-          className="mt-1 w-full rounded-ctl border border-hairline bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-dim"
+          className="mt-1 w-full rounded-ctl border border-hairline bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-dim max-lg:min-h-11 max-lg:text-base"
         />
         {touchedName && !valid && (
           <p className="mt-1 text-xs text-ink">Name is required.</p>
@@ -109,7 +159,7 @@ function ProfileEditor({
               aria-label={`Set tile color to ${entry.label}`}
               title={entry.label}
               onClick={() => setColor(entry.id)}
-              className={`size-8 rounded-[10px] border-2 transition-colors duration-[250ms] ease-in-out ${
+              className={`size-8 max-lg:size-11 rounded-[10px] border-2 transition-colors duration-[250ms] ease-in-out ${
                 color === entry.id
                   ? "border-white"
                   : "border-transparent hover:border-white/30"
@@ -123,7 +173,7 @@ function ProfileEditor({
         <button
           type="submit"
           disabled={!valid}
-          className="rounded-ctl bg-accent px-3 py-2 text-sm font-medium text-canvas transition-colors duration-[250ms] ease-in-out disabled:opacity-40"
+          className="rounded-ctl bg-accent px-3 py-2 text-sm font-medium text-canvas transition-colors duration-[250ms] ease-in-out disabled:opacity-40 max-lg:min-h-11"
         >
           {isNew ? "Add profile" : "Save"}
         </button>
@@ -143,7 +193,7 @@ function ProfileEditor({
               }
               setArmed(true);
             }}
-            className={`rounded-ctl border px-3 py-2 text-sm transition-colors duration-[250ms] ease-in-out disabled:cursor-not-allowed disabled:opacity-40 ${
+            className={`rounded-ctl border px-3 py-2 text-sm transition-colors duration-[250ms] ease-in-out disabled:cursor-not-allowed disabled:opacity-40 max-lg:min-h-11 ${
               armed
                 ? "border-red-400/40 text-red-400"
                 : "border-hairline text-ink-dim hover:bg-surface-2 hover:text-ink"
@@ -155,7 +205,7 @@ function ProfileEditor({
         <button
           type="button"
           onClick={onBack}
-          className="rounded-ctl border border-hairline px-3 py-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:bg-surface-2"
+          className="rounded-ctl border border-hairline px-3 py-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:bg-surface-2 max-lg:min-h-11"
         >
           Back
         </button>
@@ -172,6 +222,10 @@ function ProfileEditor({
 function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const isDesktop = useSyncExternalStore(
+    subscribeDesktop,
+    () => DESKTOP_QUERY.matches,
+  );
 
   const profiles = useProfileStore((state) => state.profiles);
   const addProfile = useProfileStore((state) => state.addProfile);
@@ -252,7 +306,7 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md max-lg:items-end max-lg:p-0"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -268,17 +322,25 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-label="Manage profiles"
-        className="flex max-h-[80vh] w-[560px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-[24px] material-modal"
-        initial={{ opacity: 0, scale: 0.96 }}
+        className="flex max-h-[80vh] w-[560px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-[24px] material-modal max-lg:max-h-[85dvh] max-lg:w-full max-lg:max-w-none max-lg:rounded-t-[24px] max-lg:rounded-b-none"
+        // below lg the sheet rises from the bottom edge; desktop keeps its scale-settle
+        initial={{ opacity: 0, ...(isDesktop ? { scale: 0.96 } : { y: 56 }) }}
         animate={{
           opacity: 1,
-          // 2% overshoot on settle, one gentle keyframe pass, no bounce
-          scale: [0.96, 1.008, 1],
-          transition: { duration: 0.55, ease: EASE, times: [0, 0.7, 1] },
+          ...(isDesktop
+            ? {
+                // 2% overshoot on settle, one gentle keyframe pass, no bounce
+                scale: [0.96, 1.008, 1],
+                transition: { duration: 0.55, ease: EASE, times: [0, 0.7, 1] },
+              }
+            : {
+                y: 0,
+                transition: { duration: 0.55, ease: EASE },
+              }),
         }}
         exit={{
           opacity: 0,
-          scale: 0.96,
+          ...(isDesktop ? { scale: 0.96 } : { y: 56 }),
           transition: { duration: 0.3, ease: EASE },
         }}
         onKeyDown={onPanelKeyDown}
@@ -305,12 +367,12 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
             autoFocus
             aria-label="Close manage profiles"
             onClick={onClose}
-            className="rounded-ctl p-1.5 text-ink-dim transition-colors duration-[250ms] ease-in-out hover:bg-surface-2 hover:text-ink"
+            className="rounded-ctl p-1.5 text-ink-dim transition-colors duration-[250ms] ease-in-out hover:bg-surface-2 hover:text-ink max-lg:size-11"
           >
             <X size={16} aria-hidden="true" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 max-lg:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <AnimatePresence mode="wait" initial={false}>
             {editing === null ? (
               <motion.div
@@ -336,9 +398,9 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
                   >
                     <span
                       aria-hidden="true"
-                      className="relative grid size-[120px] place-items-center overflow-hidden rounded-[12px] font-display text-4xl font-bold"
+                      className="relative grid size-[120px] place-items-center overflow-hidden rounded-[12px] font-display text-4xl font-bold shadow-[inset_0_2px_18px_rgba(0,0,0,0.22)]"
                       style={{
-                        backgroundColor: PROFILE_HEX[profile.color],
+                        background: profileTileBackground(profile.color),
                         color: profileInitialInk(profile.color),
                       }}
                     >
@@ -348,6 +410,7 @@ function ManageProfilesPanel({ onClose }: { onClose: () => void }) {
                       </span>
                     </span>
                     <span className="text-sm text-ink">{profile.name}</span>
+                    <TileStats profileId={profile.id} />
                   </motion.button>
                 ))}
                 <motion.button

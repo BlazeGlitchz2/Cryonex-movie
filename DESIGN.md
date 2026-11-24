@@ -157,3 +157,9 @@ Cryonex timing tiers, ease-in-out family, token
   control, episode cards) use `.glass-surface` (alias of
   `.material-card`) in index.css. Posters and artwork never glass.
   The dock is glass in both modes.
+- Ambient backdrop: ON by default, owner-requested. Three blurred
+  projector lights (emerald and warm white, the palette's own colors)
+  drift on 80 to 120 second transform loops behind the glass. Desktop
+  only, hidden below lg for phone GPU budgets; the global
+  reduced-motion kill freezes the drift. Purpose: the room keeps
+  breathing between artwork spills.

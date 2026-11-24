@@ -4,9 +4,9 @@ import { useLocation } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
 import {
   GUEST_ID,
-  PROFILE_HEX,
   profileInitial,
   profileInitialInk,
+  profileTileBackground,
   useProfileStore,
 } from "../../store/useProfileStore";
 import { useToastStore } from "../../store/useToastStore";
@@ -233,9 +233,9 @@ export function TopBar() {
               aria-expanded={profileMenuOpen}
               aria-label={`Profiles for ${activeProfile.name}`}
               onClick={() => setProfileMenuOpen((open) => !open)}
-              className="grid size-8 max-lg:size-11 place-items-center rounded-[10px] border-2 border-transparent font-display text-sm font-bold transition-colors duration-250 ease-in-out hover:border-white"
+              className="grid size-8 max-lg:size-11 place-items-center rounded-[10px] border-2 border-transparent font-display text-sm font-bold shadow-[inset_0_2px_10px_rgba(0,0,0,0.18)] transition-colors duration-250 ease-in-out hover:border-white"
               style={{
-                backgroundColor: PROFILE_HEX[activeProfile.color],
+                background: profileTileBackground(activeProfile.color),
                 color: profileInitialInk(activeProfile.color),
               }}
             >
@@ -277,7 +277,7 @@ export function TopBar() {
                         aria-hidden="true"
                         className="grid size-6 shrink-0 place-items-center rounded-md font-display text-[10px] font-bold"
                         style={{
-                          backgroundColor: PROFILE_HEX[profile.color],
+                          background: profileTileBackground(profile.color),
                           color: profileInitialInk(profile.color),
                         }}
                       >
