@@ -142,7 +142,7 @@ function RecentSection({
           <button
             type="button"
             onClick={onClear}
-            className="text-xs text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
+            className="flex min-h-11 items-center px-1 text-xs text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
           >
             Clear
           </button>
@@ -163,7 +163,7 @@ function RecentSection({
             <button
               type="button"
               onClick={() => onPick(query)}
-              className="max-w-40 truncate px-2.5 py-1 text-left text-xs text-ink"
+              className="max-w-40 truncate px-2.5 py-1 text-left text-xs text-ink max-lg:min-h-11"
             >
               {query}
             </button>
@@ -171,7 +171,7 @@ function RecentSection({
               type="button"
               aria-label={`Remove ${query} from recent searches`}
               onClick={() => onRemove(query)}
-              className="border-l border-hairline px-1.5 py-1 text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
+              className="border-l border-hairline px-1.5 py-1 text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink max-lg:min-h-11 max-lg:min-w-11 max-lg:px-2"
             >
               <X size={11} aria-hidden="true" />
             </button>

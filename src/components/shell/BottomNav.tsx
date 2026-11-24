@@ -36,6 +36,7 @@ export function BottomNav() {
       <NavLink
         to="/"
         end
+        aria-label="Home"
         className={({ isActive }) =>
           `${TAB_CLASS} ${isActive ? "text-ink" : "text-ink-dim"}`
         }
@@ -60,6 +61,7 @@ export function BottomNav() {
 
       <NavLink
         to="/new"
+        aria-label="New and popular"
         className={({ isActive }) =>
           `${TAB_CLASS} ${isActive ? "text-ink" : "text-ink-dim"}`
         }
@@ -84,6 +86,7 @@ export function BottomNav() {
 
       <NavLink
         to="/my-list"
+        aria-label="My list"
         className={({ isActive }) =>
           `${TAB_CLASS} ${isActive ? "text-ink" : "text-ink-dim"}`
         }
@@ -109,6 +112,7 @@ export function BottomNav() {
       <button
         type="button"
         onClick={() => setCommandOpen(true)}
+        aria-label="Search"
         className={`${TAB_CLASS} text-ink-dim hover:text-ink`}
       >
         <TabIcon active={false}>
@@ -120,6 +124,7 @@ export function BottomNav() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
+        aria-label="Switch profile"
         className={`${TAB_CLASS} text-ink-dim hover:text-ink`}
       >
         <TabIcon active={false}>

@@ -14,7 +14,7 @@ import {
 } from "../services/tmdb";
 
 const chipClass = (active: boolean) =>
-  `shrink-0 rounded-ctl border px-3.5 py-1.5 text-sm transition-colors duration-250 ease-in-out ${
+  `shrink-0 rounded-ctl border px-3.5 py-1.5 text-sm transition-colors duration-250 ease-in-out max-lg:min-h-11 ${
     active
       ? "border-transparent bg-accent font-medium text-canvas"
       : "border-hairline bg-surface text-ink-dim hover:border-white/15 hover:text-ink"

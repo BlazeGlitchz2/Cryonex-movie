@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import { Info, Play, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { useAverageColor } from "../watch/useAverageColor";
 import { useNavigate } from "react-router-dom";
 import { fetchMediaDetails, tmdbImageUrl } from "../../services/tmdb";
 import { useUIStore } from "../../store/useUIStore";
@@ -46,6 +47,21 @@ const contentRise: Variants = {
   hidden: { opacity: 0, y: 12 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
 };
+
+// touch only: the spotlight answers a horizontal swipe, desktop keeps its dots
+const TOUCH_QUERY = window.matchMedia("(hover: none) and (pointer: coarse)");
+
+function subscribeTouch(onChange: () => void) {
+  TOUCH_QUERY.addEventListener("change", onChange);
+  return () => TOUCH_QUERY.removeEventListener("change", onChange);
+}
+
+function useTouchPointer(): boolean {
+  return useSyncExternalStore(
+    subscribeTouch,
+    () => TOUCH_QUERY.matches,
+  );
+}
 
 function useTitleDetails(item: MediaItem) {
   return useQuery({
@@ -203,10 +219,25 @@ function SpotlightCard({
 }) {
   const active = spots[index];
   const itemKey = `${active.mediaType}-${active.id}`;
+  const touchPointer = useTouchPointer();
+  const rotate = (direction: 1 | -1) =>
+    onSelect((index + direction + spots.length) % spots.length);
 
   return (
     <motion.div
       variants={rise}
+      drag={touchPointer ? "x" : false}
+      dragDirectionLock
+      // rubber band both ways, the swipe only commits past a threshold
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.18}
+      onDragEnd={(_, info) => {
+        if (info.offset.x < -60) {
+          rotate(1);
+        } else if (info.offset.x > 60) {
+          rotate(-1);
+        }
+      }}
       className={`material-card relative ${HERO_HEIGHT} overflow-hidden rounded-hero lg:col-span-7`}
     >
       <AnimatePresence initial={false}>
@@ -246,7 +277,7 @@ function SpotlightCard({
         <SpotlightContent key={itemKey} item={active} />
       </AnimatePresence>
       {spots.length > 1 && (
-        <div className="absolute bottom-4 right-6 z-20 flex items-center gap-2">
+        <div className="absolute bottom-4 right-6 z-20 flex items-center gap-1.5">
           {spots.map((spot, i) => {
             const activeDot = i === index;
             return (
@@ -256,7 +287,8 @@ function SpotlightCard({
                 onClick={() => onSelect(i)}
                 aria-label={`Show ${spot.title}`}
                 aria-current={activeDot}
-                className="grid h-6 w-6 place-items-center rounded-full"
+                // 44px hit area, the visible dot inside stays a hairline marker
+                className="grid h-11 w-11 place-items-center rounded-full"
               >
                 <motion.span
                   layout
@@ -363,6 +395,12 @@ export function BentoHero({ items, loading, error }: BentoHeroProps) {
   const spots = items.slice(0, 3);
   const sides = items.slice(3, 5);
   const activeIndex = spots.length === 0 ? 0 : index % spots.length;
+  // the spotlight artwork is the room's light source: its average color spills behind the bento
+  const spillColor = useAverageColor(
+    spots[activeIndex]?.backdropPath
+      ? tmdbImageUrl(spots[activeIndex].backdropPath, "w500")
+      : null,
+  );
 
   useEffect(() => {
     if (spots.length < 2) return;
@@ -396,12 +434,30 @@ export function BentoHero({ items, loading, error }: BentoHeroProps) {
   }
 
   return (
-    <motion.div
-      variants={stagger}
-      initial="hidden"
-      animate="show"
-      className="grid gap-4 lg:grid-cols-12"
-    >
+    <div className="relative">
+      <AnimatePresence initial={false}>
+        {spillColor && (
+          <motion.div
+            key={spillColor}
+            aria-hidden="true"
+            // blur is halved below lg like the materials, it is the top mobile GPU cost
+            className="pointer-events-none absolute inset-x-[-6%] top-[-48px] h-[420px] blur-[110px] max-lg:blur-[72px]"
+            style={{
+              background: `radial-gradient(ellipse 50% 45% at 50% 40%, ${spillColor}, transparent)`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.16 }}
+            exit={{ opacity: 0, transition: { duration: 0.45, ease: EASE } }}
+            transition={{ duration: 0.9, ease: EASE }}
+          />
+        )}
+      </AnimatePresence>
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+        className="relative grid gap-4 lg:grid-cols-12"
+      >
       <SpotlightCard spots={spots} index={activeIndex} onSelect={setIndex} />
       {sides.length > 0 && (
         // below lg the two portrait cards swipe; at lg the original 2-up grid returns
@@ -411,7 +467,8 @@ export function BentoHero({ items, loading, error }: BentoHeroProps) {
           ))}
         </div>
       )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 

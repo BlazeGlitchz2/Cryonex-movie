@@ -115,7 +115,7 @@ export function ContinueWatchingPage() {
                   onClick={() =>
                     removeFromContinueWatching(entry.id, entry.mediaType)
                   }
-                  className="absolute right-2 top-2 z-10 grid size-10 place-items-center rounded-full border-2 border-white/50 bg-white/5 text-ink-dim opacity-0 transition duration-250 ease-in-out hover:border-white hover:text-ink group-hover:opacity-100 focus-visible:opacity-100"
+                  className="absolute right-2 top-2 z-10 grid size-10 place-items-center rounded-full border-2 border-white/50 bg-white/5 text-ink-dim opacity-0 transition duration-250 ease-in-out hover:border-white hover:text-ink group-hover:opacity-100 focus-visible:opacity-100 max-lg:opacity-100"
                   aria-label={`Remove ${entry.title} from continue watching`}
                 >
                   <X size={20} aria-hidden="true" />

@@ -233,7 +233,7 @@ export function TopBar() {
               aria-expanded={profileMenuOpen}
               aria-label={`Profiles for ${activeProfile.name}`}
               onClick={() => setProfileMenuOpen((open) => !open)}
-              className="grid size-8 place-items-center rounded-[10px] border-2 border-transparent font-display text-sm font-bold transition-colors duration-250 ease-in-out hover:border-white"
+              className="grid size-8 max-lg:size-11 place-items-center rounded-[10px] border-2 border-transparent font-display text-sm font-bold transition-colors duration-250 ease-in-out hover:border-white"
               style={{
                 backgroundColor: PROFILE_HEX[activeProfile.color],
                 color: profileInitialInk(activeProfile.color),

@@ -123,7 +123,7 @@ export function WhoIsWatchingGate() {
         <button
           type="button"
           onClick={() => setManageOpen(true)}
-          className="mt-12 flex items-center gap-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
+          className="mt-12 flex min-h-11 items-center gap-2 px-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
         >
           <Users size={16} aria-hidden="true" />
           Manage profiles
@@ -136,7 +136,7 @@ export function WhoIsWatchingGate() {
           switchProfile(GUEST_ID);
           pushToast({ title: "Watching as Guest" });
         }}
-        className="mt-5 flex items-center gap-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
+        className="mt-5 flex min-h-11 items-center gap-2 px-2 text-sm text-ink-dim transition-colors duration-[250ms] ease-in-out hover:text-ink"
       >
         <UserRound size={16} aria-hidden="true" />
         Continue as guest

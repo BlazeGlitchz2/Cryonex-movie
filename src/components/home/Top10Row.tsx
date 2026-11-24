@@ -201,7 +201,7 @@ export function Top10Row({
                 transition: { duration: 0.25, ease: EASE },
               }}
               onClick={() => scrollToCard(-1)}
-              className="absolute -left-3 top-1/2 z-10 grid h-10 w-10 place-items-center rounded-full border border-hairline bg-surface text-ink transition-colors duration-250 ease-in-out hover:bg-surface-2"
+              className="touch-hide absolute -left-3 top-1/2 z-10 grid h-10 w-10 place-items-center rounded-full border border-hairline bg-surface text-ink transition-colors duration-250 ease-in-out hover:bg-surface-2"
               aria-label={`Scroll ${title} backward`}
             >
               <ChevronLeft size={18} aria-hidden="true" />
@@ -225,7 +225,7 @@ export function Top10Row({
                 transition: { duration: 0.25, ease: EASE },
               }}
               onClick={() => scrollToCard(1)}
-              className="absolute -right-3 top-1/2 z-10 grid h-10 w-10 place-items-center rounded-full border border-hairline bg-surface text-ink transition-colors duration-250 ease-in-out hover:bg-surface-2"
+              className="touch-hide absolute -right-3 top-1/2 z-10 grid h-10 w-10 place-items-center rounded-full border border-hairline bg-surface text-ink transition-colors duration-250 ease-in-out hover:bg-surface-2"
               aria-label={`Scroll ${title} forward`}
             >
               <ChevronRight size={18} aria-hidden="true" />

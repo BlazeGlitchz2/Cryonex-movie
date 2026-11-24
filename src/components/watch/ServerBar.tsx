@@ -164,7 +164,7 @@ export default function ServerBar({
                   whileHover={{ y: -1 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.25, ease: EASE }}
-                  className={`relative flex shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-sm transition-colors duration-[250ms] ease-in-out ${
+                  className={`relative flex shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-sm transition-colors duration-[250ms] ease-in-out max-lg:min-h-11 ${
                     active ? "text-ink" : "text-ink-dim hover:text-ink"
                   }`}
                 >

@@ -83,7 +83,7 @@ function SortControl({
             whileTap={{ scale: 0.96 }}
             transition={{ duration: 0.25, ease: EASE }}
             onClick={() => onChange(option.id)}
-            className="relative rounded-ctl px-3 py-1.5 text-xs transition-colors duration-250 ease-in-out"
+            className="relative rounded-ctl px-3 py-1.5 text-xs transition-colors duration-250 ease-in-out max-lg:min-h-11 max-lg:px-4 max-lg:text-sm"
           >
             {active && (
               <motion.span

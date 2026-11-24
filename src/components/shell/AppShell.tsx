@@ -20,8 +20,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   // one nav surface at a time: both share layoutId "side-active", so they must never mount together
   const isDesktop = useSyncExternalStore(subscribeDesktop, () => DESKTOP_QUERY.matches);
 
+  // dvh keeps the bottom nav clear of mobile browser chrome; vh fallback for old WebKit
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden [@supports(height:100dvh)]:h-dvh">
       {isDesktop && <Sidebar />}
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar />

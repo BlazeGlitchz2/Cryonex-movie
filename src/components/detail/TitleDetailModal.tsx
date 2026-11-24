@@ -138,7 +138,7 @@ function ServerPill({
         aria-haspopup="menu"
         aria-label={`Server: ${active ? active.name : "No server"}`}
         onClick={() => onMenuOpenChange(!menuOpen)}
-        className="flex items-center gap-2 rounded-full border border-white/15 bg-black/60 py-2 pl-3 pr-3.5 text-xs font-semibold text-ink backdrop-blur-md transition-colors duration-250 ease-in-out hover:border-white/30"
+        className="flex items-center gap-2 rounded-full border border-white/15 bg-black/60 py-2 pl-3 pr-3.5 text-xs font-semibold text-ink backdrop-blur-md transition-colors duration-250 ease-in-out hover:border-white/30 max-lg:min-h-11"
       >
         <Server size={14} aria-hidden="true" />
         {active ? active.name : "No server"}
