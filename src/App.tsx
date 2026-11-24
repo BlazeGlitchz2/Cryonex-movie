@@ -102,6 +102,9 @@ function RoutedApp() {
   const location = useLocation();
   const providers = useAppStore((s) => s.providers);
   const windowGlass = useAppearanceStore((s) => s.windowGlass);
+  const compatibilityMode = useAppearanceStore(
+    (s) => s.compatibilityMode,
+  );
 
   useEffect(() => {
     if (windowGlass) {
@@ -110,6 +113,18 @@ function RoutedApp() {
       delete document.documentElement.dataset.windowGlass;
     }
   }, [windowGlass]);
+
+  useEffect(() => {
+    // compatibility mode kills the native blocker at the webview level;
+    // pure web has no blocker, so the bridge call stays silent there
+    if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
+      void import("@tauri-apps/api/core")
+        .then(({ invoke }) =>
+          invoke("set_adblock", { enabled: !compatibilityMode }),
+        )
+        .catch(() => {});
+    }
+  }, [compatibilityMode]);
 
   useEffect(() => {
     void syncEmbedHosts(

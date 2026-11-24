@@ -901,13 +901,16 @@ function DetailOverlay({
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.8, ease: EASE }}
                   >
-                    {/* scale crops the YouTube letterbox chrome away at the edges */}
+                    {/* scale crops the YouTube letterbox chrome away at the
+                        edges; no sandbox here on purpose: WKWebView throws
+                        "Video player configuration error" for sandboxed YT
+                        frames, and the host is fixed to youtube-nocookie */}
                     <iframe
                       key={trailerFrameKey}
                       src={trailerSrc}
                       title="Trailer"
-                      allow="autoplay; encrypted-media; fullscreen"
-                      sandbox="allow-scripts allow-same-origin allow-presentation"
+                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                      referrerPolicy="strict-origin-when-cross-origin"
                       className="h-full w-full scale-[1.15]"
                     />
                   </motion.div>

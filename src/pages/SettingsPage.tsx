@@ -1,14 +1,15 @@
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { Server } from "lucide-react";
-import { useRef } from "react";
-import type { CSSProperties } from "react";
+import { Server, Trash2, Upload } from "lucide-react";
+import { useRef, useState } from "react";
+import type { ChangeEvent, CSSProperties } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { DestructiveRow } from "../components/settings/DestructiveRow";
 import Switch from "../components/settings/Switch";
 import {
   AMBIENT_PRESETS,
   useAppearanceStore,
+  WALLPAPER_KEY,
 } from "../store/useAppearanceStore";
 import type { AmbientPreset } from "../store/useAppearanceStore";
 import { useAppStore } from "../store/useAppStore";
@@ -44,7 +45,49 @@ const PRESET_SWATCH: Record<AmbientPreset, CSSProperties> = {
     background:
       "linear-gradient(to bottom, #f5f5f7, rgba(245,245,247,0.15) 60%, #161614)",
   },
+  gradient: {
+    background:
+      "linear-gradient(115deg, #121312, #2E9E4F 35%, #46D369 55%, #f5f5f7 80%)",
+  },
+  custom: {
+    background:
+      "linear-gradient(135deg, #161614 40%, #2E9E4F 60%, #f5f5f7 100%)",
+  },
 };
+
+// wallpapers live as downscaled JPEG data URLs; raw phone photos would
+// blow the localStorage budget, so big files come down to 1600px wide
+async function downscaleToDataUrl(file: File): Promise<string | null> {
+  const original = await new Promise<string | null>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
+  if (!original) {
+    return null;
+  }
+  const image = await new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = original;
+  });
+  if (!image) {
+    return null;
+  }
+  const maxW = 1600;
+  const scale = Math.min(1, maxW / image.width);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return null;
+  }
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", 0.8);
+}
 
 function SectionCard({
   title,
@@ -171,8 +214,58 @@ export function SettingsPage() {
   const setWindowGlass = useAppearanceStore(
     (state) => state.setWindowGlass,
   );
+  const ambientBackdrop = useAppearanceStore(
+    (state) => state.ambientBackdrop,
+  );
+  const setAmbientBackdrop = useAppearanceStore(
+    (state) => state.setAmbientBackdrop,
+  );
+  const ambientIntensity = useAppearanceStore(
+    (state) => state.ambientIntensity,
+  );
+  const setAmbientIntensity = useAppearanceStore(
+    (state) => state.setAmbientIntensity,
+  );
+  const compatibilityMode = useAppearanceStore(
+    (state) => state.compatibilityMode,
+  );
+  const setCompatibilityMode = useAppearanceStore(
+    (state) => state.setCompatibilityMode,
+  );
   const pushToast = useToastStore((state) => state.pushToast);
   const setSourcesOpen = useUIStore((state) => state.setSourcesOpen);
+
+  const [wallpaperSet, setWallpaperSet] = useState(() => {
+    try {
+      return localStorage.getItem(WALLPAPER_KEY) !== null;
+    } catch {
+      return false;
+    }
+  });
+
+  const onWallpaperPick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const dataUrl = await downscaleToDataUrl(file);
+    if (!dataUrl) {
+      pushToast({ title: "Could not read that image." });
+      return;
+    }
+    try {
+      localStorage.setItem(WALLPAPER_KEY, dataUrl);
+    } catch {
+      pushToast({ title: "Image still too large, try a smaller one." });
+      return;
+    }
+    // same-tab refresh; the backdrop listens for storage events
+    window.dispatchEvent(new StorageEvent("storage"));
+    setWallpaperSet(true);
+    setAmbientBackdrop("custom");
+    pushToast({ title: "Wallpaper set", tone: "success" });
+    event.target.value = "";
+  };
 
   const providers = useAppStore((state) => state.providers);
   const activeProviderId = useAppStore((state) => state.activeProviderId);
@@ -233,6 +326,70 @@ export function SettingsPage() {
               <div className="mt-3">
                 <BackdropPicker />
               </div>
+              {ambientBackdrop !== "off" && (
+                <div className="mt-4">
+                  <label
+                    htmlFor="backdrop-intensity"
+                    className="text-xs text-ink-dim"
+                  >
+                    Intensity, {ambientIntensity} of 100
+                  </label>
+                  <input
+                    id="backdrop-intensity"
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={ambientIntensity}
+                    onChange={(event) =>
+                      setAmbientIntensity(Number(event.target.value))
+                    }
+                    className="mt-2 h-11 w-full max-w-xs cursor-pointer accent-accent"
+                  />
+                </div>
+              )}
+              {ambientBackdrop === "custom" && (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <label
+                    htmlFor="wallpaper-file"
+                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-ctl border border-hairline px-4 text-sm text-ink-dim transition-colors duration-250 ease-in-out hover:border-white/15 hover:text-ink"
+                  >
+                    <Upload size={15} aria-hidden="true" />
+                    Choose image
+                  </label>
+                  <input
+                    id="wallpaper-file"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={onWallpaperPick}
+                  />
+                  {wallpaperSet && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          localStorage.removeItem(WALLPAPER_KEY);
+                        } catch {
+                          // an unset key is the same as a missing one
+                        }
+                        window.dispatchEvent(
+                          new StorageEvent("storage"),
+                        );
+                        setWallpaperSet(false);
+                        pushToast({ title: "Wallpaper removed" });
+                      }}
+                      className="flex min-h-11 items-center gap-2 rounded-ctl border border-hairline px-4 text-sm text-ink-dim transition-colors duration-250 ease-in-out hover:border-white/15 hover:text-ink"
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                      Remove
+                    </button>
+                  )}
+                  <p className="w-full text-xs text-ink-dim">
+                    Scaled to 1600px and kept on this device only.
+                  </p>
+                </div>
+              )}
             </div>
           </SectionCard>
 
@@ -254,6 +411,33 @@ export function SettingsPage() {
               >
                 Manage sources
               </button>
+            </div>
+            <div className="mt-2 border-t border-hairline pt-2">
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm text-ink">Compatibility mode</p>
+                  <p className="mt-0.5 text-xs text-ink-dim">
+                    Some sources refuse to play with ad blocking or the
+                    sandbox on. This turns both off everywhere.
+                  </p>
+                </div>
+                <Switch
+                  checked={compatibilityMode}
+                  label="Compatibility mode"
+                  onToggle={() => {
+                    setCompatibilityMode(!compatibilityMode);
+                    pushToast({
+                      title: !compatibilityMode
+                        ? "Compatibility mode on, ads possible"
+                        : "Compatibility mode off",
+                    });
+                  }}
+                />
+              </div>
+              <p className="text-xs leading-relaxed text-ink-dim">
+                Per-source opt-out stays available in Manage sources, for
+                keeping the rest protected.
+              </p>
             </div>
           </SectionCard>
 

@@ -181,11 +181,19 @@ index.css token overrides turn the canvas translucent (alpha 0.6) over
 the native macOS under-window blur. The window itself is transparent
 with `underWindowBackground` effects chained in `src-tauri/src/lib.rs`.
 `ambientBackdrop: AmbientPreset` (default "projector", owner-requested):
-"off" | "projector" | "aurora" | "ember" | "spotlight", version 3
-migrate maps the old boolean. Rendered by
+"off" | "projector" | "aurora" | "ember" | "spotlight" | "gradient" |
+"custom", version 3 migrate maps the old boolean. Rendered by
 `src/components/shell/AmbientBackdrop.tsx` (lg and up only, transform
 keyframes in index.css, frozen by the global reduced-motion kill).
-The Settings page owns the picker; Sources modal never shows appearance.
+`ambientIntensity: number` (0 to 100, default 60) scales every preset
+through a 0.5x to 1.8x multiplier. "custom" renders the JPEG data URL
+stored under `cryonex-wallpaper` (Settings downscales to 1600px; the
+backdrop listens for storage events). The Settings page owns the
+picker, intensity slider and image upload; Sources modal never shows
+appearance. `compatibilityMode: boolean` (default false): App.tsx
+invokes the `set_adblock` Tauri command with `!compatibilityMode` on
+every change, and WatchPage drops the theater sandbox entirely while
+it is on. Honest copy in Settings names the tradeoff (ads possible).
 
 ### Button grammar
 

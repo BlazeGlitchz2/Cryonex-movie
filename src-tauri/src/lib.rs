@@ -112,12 +112,22 @@ fn vibrancy_state(window: &tauri::WebviewWindow) -> String {
   }
 }
 
+#[tauri::command]
+fn set_adblock(enabled: bool, window: tauri::WebviewWindow) {
+  // compatibility mode runs the whole native blocker off at runtime
+  let _ = window.with_webview(move |_webview| adblock::set_enabled(enabled));
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_deep_link::init())
     .manage(EmbedHosts(Mutex::new(base_embed_hosts())))
-    .invoke_handler(tauri::generate_handler![set_embed_hosts, log_nav])
+    .invoke_handler(tauri::generate_handler![
+      set_embed_hosts,
+      log_nav,
+      set_adblock
+    ])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

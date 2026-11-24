@@ -28,7 +28,11 @@ export function TmdbImage({
   eager = false,
   fetchPriority,
 }: TmdbImageProps) {
-  const base = src ?? (path ? tmdbImageUrl(path, size) : null);
+  // a poster that fails at a large size gets one more chance at w500:
+  // the smallest file is the most likely to arrive on a weak network
+  const [downgraded, setDowngraded] = useState(false);
+  const base =
+    src ?? (path ? tmdbImageUrl(path, downgraded ? "w500" : size) : null);
   // logos have no intrinsic size, so a zero-area box would never intersect
   const eagerLoad = eager || width === undefined || height === undefined;
   const imgRef = useRef<HTMLImageElement>(null);
@@ -58,17 +62,25 @@ export function TmdbImage({
       { rootMargin: "600px 400px" },
     );
     observer.observe(node);
-    return () => observer.disconnect();
+    // safety net: if the observer never fires (edge cases inside nested
+    // scrollers), show the image anyway rather than leave a blank frame
+    const failsafe = window.setTimeout(() => setVisible(true), 4000);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(failsafe);
+    };
   }, [visible, base]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    if (downgraded) {
+      return;
+    }
+    return () => {
       if (retryTimer.current !== null) {
         window.clearTimeout(retryTimer.current);
       }
-    },
-    [],
-  );
+    };
+  }, [downgraded]);
 
   // a failed poster gets another chance when the network or the tab returns
   useEffect(() => {
@@ -135,6 +147,18 @@ export function TmdbImage({
             retryTimer.current = null;
             setAttempt((value) => value + 1);
           }, IMAGE_RETRY_DELAYS[attempt]);
+          return;
+        }
+        // large sizes get one final chance at w500 before giving up
+        if (
+          !downgraded &&
+          !src &&
+          path &&
+          size !== "w500" &&
+          size !== "original"
+        ) {
+          setDowngraded(true);
+          setAttempt(0);
           return;
         }
         setFailed(true);

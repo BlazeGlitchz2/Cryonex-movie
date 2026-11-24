@@ -350,6 +350,21 @@ html[data-window-glass="true"] {
   animation: ambient-ember-b 110s ease-in-out infinite alternate;
 }
 
+/* Gradient: one oversized sheet slides on x, the whole window reads as
+   a slow cinema gradient instead of three floating lights */
+@keyframes ambient-gradient-x {
+  from {
+    transform: translate3d(-14%, 0, 0);
+  }
+  to {
+    transform: translate3d(14%, 0, 0);
+  }
+}
+
+.ambient-gradient {
+  animation: ambient-gradient-x 120s ease-in-out infinite alternate;
+}
+
 /*
   Film grain: the one identity texture of the cinema room.
   Static noise, never animated, 3.5% opacity over everything.

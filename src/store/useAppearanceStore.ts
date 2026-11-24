@@ -3,7 +3,14 @@ import { persist } from "zustand/middleware";
 
 // owner-requested wallpaper presets; every palette stays inside the
 // design system (emerald accent, warm white ink, profile hues as light)
-export type AmbientPreset = "off" | "projector" | "aurora" | "ember" | "spotlight";
+export type AmbientPreset =
+  | "off"
+  | "projector"
+  | "aurora"
+  | "ember"
+  | "spotlight"
+  | "gradient"
+  | "custom";
 
 export const AMBIENT_PRESETS: {
   id: AmbientPreset;
@@ -14,7 +21,13 @@ export const AMBIENT_PRESETS: {
   { id: "aurora", label: "Aurora" },
   { id: "ember", label: "Ember" },
   { id: "spotlight", label: "Spotlight" },
+  { id: "gradient", label: "Gradient" },
+  { id: "custom", label: "Custom image" },
 ];
+
+// stored at this key as a downscaled JPEG data URL; a wallpaper-sized
+// PNG would blow the localStorage budget
+export const WALLPAPER_KEY = "cryonex-wallpaper";
 
 interface AppearanceState {
   glass: boolean;
@@ -25,6 +38,13 @@ interface AppearanceState {
   toggleWindowGlass: () => void;
   ambientBackdrop: AmbientPreset;
   setAmbientBackdrop: (v: AmbientPreset) => void;
+  // 0 to 100, scales every preset's light; custom images dim their scrim
+  ambientIntensity: number;
+  setAmbientIntensity: (v: number) => void;
+  // compatibility mode: native blocker off and every player sandbox off,
+  // for sources that refuse to play any other way
+  compatibilityMode: boolean;
+  setCompatibilityMode: (v: boolean) => void;
 }
 
 export const useAppearanceStore = create<AppearanceState>()(
@@ -40,6 +60,10 @@ export const useAppearanceStore = create<AppearanceState>()(
       // default projector: owner-requested drifting light behind the glass
       ambientBackdrop: "projector",
       setAmbientBackdrop: (v) => set({ ambientBackdrop: v }),
+      ambientIntensity: 60,
+      setAmbientIntensity: (v) => set({ ambientIntensity: v }),
+      compatibilityMode: false,
+      setCompatibilityMode: (v) => set({ compatibilityMode: v }),
     }),
     {
       name: "cryonex-appearance",

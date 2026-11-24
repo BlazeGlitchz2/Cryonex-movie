@@ -12,10 +12,14 @@ import {
   type ReactNode,
 } from "react";
 import { useKeyboardShortcut } from "../../hooks/useKeyboardShortcut";
-import { searchMulti } from "../../services/tmdb";
+import {
+  fetchTrendingAll,
+  searchMulti,
+} from "../../services/tmdb";
 import { useSearchHistoryStore } from "../../store/useSearchHistoryStore";
 import { useUIStore } from "../../store/useUIStore";
 import type { MediaItem } from "../../types/media";
+import { standardQueryOptions } from "../shared/MediaRow";
 import TmdbImage from "../shared/TmdbImage";
 
 const EASE: [number, number, number, number] = [0.4, 0, 0.2, 1];
@@ -182,6 +186,42 @@ function RecentSection({
   );
 }
 
+// results land while the owner still types; 300ms felt like a wait
+const DEBOUNCE_MS = 160;
+
+type TypeFilter = "all" | "movie" | "tv";
+
+function TrendingSection({ onSelect }: { onSelect: (item: MediaItem) => void }) {
+  const trending = useQuery({
+    queryKey: ["trending"],
+    queryFn: fetchTrendingAll,
+    ...standardQueryOptions,
+  });
+  const items = (trending.data ?? []).slice(0, 6);
+
+  return (
+    <div className="py-3">
+      <span className="px-4 text-xs text-ink-dim">Popular right now</span>
+      <motion.div
+        variants={rowList}
+        initial="hidden"
+        animate="show"
+        className="mt-2"
+      >
+        {items.map((item, index) => (
+          <ResultRow
+            key={`trending-${item.mediaType}-${item.id}`}
+            item={item}
+            index={index}
+            active={false}
+            onSelect={onSelect}
+          />
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 function PalettePanel({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -194,6 +234,7 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
   const [raw, setRaw] = useState("");
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
   const openDetail = useUIStore((state) => state.openDetail);
   const recent = useSearchHistoryStore((state) => state.recent);
@@ -205,7 +246,7 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
     const timer = setTimeout(() => {
       setQuery(raw);
       setActiveIndex(0);
-    }, 300);
+    }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [raw]);
 
@@ -269,16 +310,25 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
   }, [activeIndex, results]);
 
   const items = results ?? [];
+  const filtered =
+    typeFilter === "all"
+      ? items
+      : items.filter((item) => item.mediaType === typeFilter);
+  const counts: Record<TypeFilter, number> = {
+    all: items.length,
+    movie: items.filter((item) => item.mediaType === "movie").length,
+    tv: items.filter((item) => item.mediaType === "tv").length,
+  };
 
   const onPanelKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      if (items.length === 0) {
+      if (filtered.length === 0) {
         return;
       }
       event.preventDefault();
       const delta = event.key === "ArrowDown" ? 1 : -1;
       setActiveIndex((index) =>
-        Math.min(Math.max(index + delta, 0), items.length - 1),
+        Math.min(Math.max(index + delta, 0), filtered.length - 1),
       );
       return;
     }
@@ -287,7 +337,7 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
       if (document.activeElement !== inputRef.current) {
         return;
       }
-      const item = items[activeIndex];
+      const item = filtered[activeIndex];
       if (!item) {
         return;
       }
@@ -322,17 +372,22 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
   };
 
   let resultsContent: ReactNode;
-  if (inputEmpty && recent.length > 0) {
+  if (inputEmpty) {
     resultsContent = (
-      <RecentSection
-        recent={recent}
-        onPick={(picked) => {
-          setRaw(picked);
-          inputRef.current?.focus();
-        }}
-        onRemove={removeRecent}
-        onClear={clearRecent}
-      />
+      <div>
+        {recent.length > 0 && (
+          <RecentSection
+            recent={recent}
+            onPick={(picked) => {
+              setRaw(picked);
+              inputRef.current?.focus();
+            }}
+            onRemove={removeRecent}
+            onClear={clearRecent}
+          />
+        )}
+        <TrendingSection onSelect={go} />
+      </div>
     );
   } else if (trimmed.length < 2) {
     resultsContent = (
@@ -381,15 +436,45 @@ function PalettePanel({ onClose }: { onClose: () => void }) {
         initial="hidden"
         animate="show"
       >
-        {items.map((item, index) => (
-          <ResultRow
-            key={`${item.mediaType}-${item.id}`}
-            item={item}
-            index={index}
-            active={index === activeIndex}
-            onSelect={go}
-          />
-        ))}
+        <div className="flex gap-2 px-4 pt-3" role="group" aria-label="Filter results">
+          {(["all", "movie", "tv"] as TypeFilter[]).map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={typeFilter === option}
+              onClick={() => {
+                setTypeFilter(option);
+                setActiveIndex(0);
+              }}
+              className={`min-h-11 rounded-full px-3.5 text-xs transition-colors duration-[250ms] ease-in-out ${
+                typeFilter === option
+                  ? "bg-white/[0.11] text-ink"
+                  : "text-ink-dim hover:bg-white/[0.06] hover:text-ink"
+              }`}
+            >
+              {option === "all"
+                ? `All ${counts.all}`
+                : option === "movie"
+                  ? `Movies ${counts.movie}`
+                  : `Series ${counts.tv}`}
+            </button>
+          ))}
+        </div>
+        {filtered.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-ink-dim">
+            No {typeFilter === "movie" ? "movies" : "series"} in these results.
+          </p>
+        ) : (
+          filtered.map((item, index) => (
+            <ResultRow
+              key={`${item.mediaType}-${item.id}`}
+              item={item}
+              index={index}
+              active={index === activeIndex}
+              onSelect={go}
+            />
+          ))
+        )}
       </motion.div>
     );
   }

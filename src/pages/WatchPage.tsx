@@ -14,6 +14,7 @@ import { fetchMediaDetails, fetchSeasonEpisodes, tmdbImageUrl } from "../service
 import { buildProviderUrl } from "../types/media";
 import type { MediaType } from "../types/media";
 import { useAppStore } from "../store/useAppStore";
+import { useAppearanceStore } from "../store/useAppearanceStore";
 import { useUIStore } from "../store/useUIStore";
 import MediaRow from "../components/shared/MediaRow";
 import ServerBar from "../components/watch/ServerBar";
@@ -68,6 +69,9 @@ export default function WatchPage() {
   const setActiveProvider = useAppStore((state) => state.setActiveProvider);
   const cinemaDim = useAppStore((state) => state.cinemaDim);
   const toggleCinemaDim = useAppStore((state) => state.toggleCinemaDim);
+  const compatibilityMode = useAppearanceStore(
+    (state) => state.compatibilityMode,
+  );
   const setSourcesOpen = useUIStore((state) => state.setSourcesOpen);
 
   const resumeEntry = useMemo(
@@ -251,7 +255,9 @@ export default function WatchPage() {
             frameTitle={frameTitle}
             ambientColor={ambientColor}
             dimmed={cinemaDim}
-            sandboxed={!(activeProvider.sandboxBypass ?? false)}
+            sandboxed={
+              !(compatibilityMode || (activeProvider.sandboxBypass ?? false))
+            }
           />
         ) : (
           <div className="material-card flex aspect-video w-full flex-col items-center justify-center gap-3 rounded-hero text-center">

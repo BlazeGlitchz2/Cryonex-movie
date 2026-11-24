@@ -151,6 +151,51 @@ pub const CONTENT_BLOCKER_RULES: &str = r#"[
 
 const RULE_LIST_IDENTIFIER: &str = "com.cryonex.embed-adblock";
 
+// the runtime toggle needs the controller and the compiled list out of
+// the install callbacks. WKWebView objects are main-thread-only and not
+// Send or Sync, so the statics hold raw pointers and every access is
+// guarded by a MainThreadMarker check. Both are app-lifetime objects,
+// the Retained ownership is moved into the static and never released.
+#[cfg(target_os = "macos")]
+mod runtime {
+    use std::sync::OnceLock;
+
+    pub static CONTROLLER: OnceLock<usize> = OnceLock::new();
+    pub static RULES: OnceLock<usize> = OnceLock::new();
+}
+
+/// Compatibility mode: some embed sources refuse to play while the native
+/// blocker runs, so the owner can switch the whole blocker off at runtime.
+/// Blocks nothing while off; the frontend shows the tradeoff next to the
+/// toggle. Ignored before install() has run.
+#[cfg(target_os = "macos")]
+pub fn set_enabled(enabled: bool) {
+    if MainThreadMarker::new().is_none() {
+        log::warn!("adblock: toggle skipped, not on the main thread");
+        return;
+    }
+    let (Some(controller), Some(list)) = (
+        runtime::CONTROLLER.get(),
+        runtime::RULES.get(),
+    ) else {
+        log::warn!("adblock: toggle before install, ignoring");
+        return;
+    };
+    let controller =
+        unsafe { &*(*controller as *const WKUserContentController) };
+    let list = unsafe { &*(*list as *const WKContentRuleList) };
+    if enabled {
+        unsafe { controller.addContentRuleList(list) };
+        log::info!("adblock: content blocker enabled");
+    } else {
+        unsafe { controller.removeAllContentRuleLists() };
+        log::info!("adblock: content blocker disabled, compatibility mode");
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn set_enabled(_enabled: bool) {}
+
 /// Compiles the rules and attaches the result to the webview's user content
 /// controller. Safe to call once per webview; logs and returns on failure.
 #[cfg(target_os = "macos")]
@@ -193,8 +238,16 @@ pub fn install(controller: *mut c_void) {
                     log::warn!("adblock: compile finished off the main thread, skipping install");
                     return;
                 }
-                let controller = unsafe { &*controller };
+                let controller = unsafe { Retained::retain(controller) };
+                let Some(controller) = controller else {
+                    log::warn!("adblock: controller went away before install");
+                    return;
+                };
                 unsafe { controller.addContentRuleList(&list) };
+                // ownership moves into the runtime statics; app-lifetime, never freed
+                let _ = runtime::CONTROLLER
+                    .set(Retained::into_raw(controller) as usize);
+                let _ = runtime::RULES.set(Retained::into_raw(list) as usize);
                 log::info!("adblock: content blocker installed for all frames");
             },
         );
