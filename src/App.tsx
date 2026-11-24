@@ -115,13 +115,15 @@ function RoutedApp() {
   }, [windowGlass]);
 
   useEffect(() => {
-    // compatibility mode kills the native blocker at the webview level;
-    // pure web has no blocker, so the bridge call stays silent there
+    // compatibility mode kills the native blocker and relaxes the native
+    // navigation guard (some sources chain players through unpredictable
+    // hosts); pure web has neither, so the bridge calls stay silent there
     if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window) {
       void import("@tauri-apps/api/core")
-        .then(({ invoke }) =>
-          invoke("set_adblock", { enabled: !compatibilityMode }),
-        )
+        .then(({ invoke }) => {
+          void invoke("set_adblock", { enabled: !compatibilityMode });
+          void invoke("set_compat_mode", { enabled: compatibilityMode });
+        })
         .catch(() => {});
     }
   }, [compatibilityMode]);

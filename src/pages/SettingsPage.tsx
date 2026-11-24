@@ -12,6 +12,10 @@ import {
   WALLPAPER_KEY,
 } from "../store/useAppearanceStore";
 import type { AmbientPreset } from "../store/useAppearanceStore";
+import {
+  clearWallpaperBlob,
+  saveWallpaperBlob,
+} from "../services/wallpaperStore";
 import { useAppStore } from "../store/useAppStore";
 import { useToastStore } from "../store/useToastStore";
 import { useUIStore } from "../store/useUIStore";
@@ -248,6 +252,36 @@ export function SettingsPage() {
     if (!file) {
       return;
     }
+    const isVideo = file.type.startsWith("video/");
+    const isGif = file.type === "image/gif";
+    if (isVideo || isGif) {
+      // animated art cannot survive canvas downscaling, it stays raw;
+      // a hard size cap keeps IndexedDB and the video decoder honest
+      if (file.size > 40 * 1024 * 1024) {
+        pushToast({ title: "Keep videos and GIFs under 40 MB." });
+        return;
+      }
+      try {
+        await saveWallpaperBlob(file);
+        localStorage.setItem(
+          WALLPAPER_KEY,
+          JSON.stringify({
+            kind: isGif ? "gif" : "video",
+            mime: file.type,
+            v: Date.now(),
+          }),
+        );
+      } catch {
+        pushToast({ title: "Could not store that file." });
+        return;
+      }
+      window.dispatchEvent(new StorageEvent("storage"));
+      setWallpaperSet(true);
+      setAmbientBackdrop("custom");
+      pushToast({ title: "Wallpaper set", tone: "success" });
+      event.target.value = "";
+      return;
+    }
     const dataUrl = await downscaleToDataUrl(file);
     if (!dataUrl) {
       pushToast({ title: "Could not read that image." });
@@ -355,12 +389,12 @@ export function SettingsPage() {
                     className="flex min-h-11 cursor-pointer items-center gap-2 rounded-ctl border border-hairline px-4 text-sm text-ink-dim transition-colors duration-250 ease-in-out hover:border-white/15 hover:text-ink"
                   >
                     <Upload size={15} aria-hidden="true" />
-                    Choose image
+                    Choose image or video
                   </label>
                   <input
                     id="wallpaper-file"
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/mp4,video/webm,video/quicktime"
                     className="sr-only"
                     onChange={onWallpaperPick}
                   />
@@ -373,6 +407,7 @@ export function SettingsPage() {
                         } catch {
                           // an unset key is the same as a missing one
                         }
+                        void clearWallpaperBlob();
                         window.dispatchEvent(
                           new StorageEvent("storage"),
                         );
@@ -386,7 +421,8 @@ export function SettingsPage() {
                     </button>
                   )}
                   <p className="w-full text-xs text-ink-dim">
-                    Scaled to 1600px and kept on this device only.
+                    Images scale to 1600px. Videos and GIFs up to 40 MB
+                    stay on this device and loop muted.
                   </p>
                 </div>
               )}
@@ -417,8 +453,10 @@ export function SettingsPage() {
                 <div className="min-w-0">
                   <p className="text-sm text-ink">Compatibility mode</p>
                   <p className="mt-0.5 text-xs text-ink-dim">
-                    Some sources refuse to play with ad blocking or the
-                    sandbox on. This turns both off everywhere.
+                    Some sources play through hosts no allowlist can
+                    predict, or refuse inside the sandbox. This turns ad
+                    blocking off, drops the sandbox, and lets embedded
+                    players load from any host.
                   </p>
                 </div>
                 <Switch

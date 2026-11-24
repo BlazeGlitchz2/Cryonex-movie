@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAppearanceStore } from "../../store/useAppearanceStore";
 import type { AmbientPreset } from "../../store/useAppearanceStore";
 import { WALLPAPER_KEY } from "../../store/useAppearanceStore";
+import { readWallpaperBlob } from "../../services/wallpaperStore";
 
 interface Blob {
   className: string;
@@ -140,25 +141,113 @@ const PRESET_BLOBS: Record<
   ],
 };
 
-function useWallpaper(): string | null {
-  const [wallpaper, setWallpaper] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(WALLPAPER_KEY);
-    } catch {
+type Wallpaper =
+  | { kind: "dataurl"; src: string }
+  | { kind: "gif"; url: string }
+  | { kind: "video"; url: string }
+  | null;
+
+async function loadWallpaper(): Promise<Wallpaper> {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(WALLPAPER_KEY);
+  } catch {
+    return null;
+  }
+  if (!raw) {
+    return null;
+  }
+  // legacy stills are plain data URLs; animated art is a metadata JSON
+  // pointing at the IndexedDB blob
+  if (raw.startsWith("data:")) {
+    return { kind: "dataurl", src: raw };
+  }
+  try {
+    const meta = JSON.parse(raw) as { kind?: string; mime?: string };
+    if (meta.kind !== "gif" && meta.kind !== "video") {
       return null;
     }
-  });
+    const blob = await readWallpaperBlob();
+    if (!blob) {
+      return null;
+    }
+    return { kind: meta.kind, url: URL.createObjectURL(blob) };
+  } catch {
+    return null;
+  }
+}
+
+// the video wallpaper is ambient decoration, so reduced motion pauses it
+function WallpaperVideo({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    // cross-tab and same-tab updates from the Settings picker
-    const onStorage = () => {
-      try {
-        setWallpaper(localStorage.getItem(WALLPAPER_KEY));
-      } catch {
-        setWallpaper(null);
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => {
+      if (query.matches) {
+        video.pause();
+      } else {
+        void video.play().catch(() => {
+          // autoplay refusal just leaves the first frame showing
+        });
       }
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, [src]);
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      autoPlay
+      muted
+      loop
+      playsInline
+      aria-hidden="true"
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  );
+}
+
+function useWallpaper(): Wallpaper {
+  const [wallpaper, setWallpaper] = useState<Wallpaper>(null);
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    const refresh = () => {
+      void loadWallpaper().then((next) => {
+        if (cancelled) {
+          if (next && next.kind !== "dataurl") {
+            URL.revokeObjectURL(next.url);
+          }
+          return;
+        }
+        setWallpaper((prev) => {
+          if (prev && prev.kind !== "dataurl") {
+            URL.revokeObjectURL(prev.url);
+          }
+          if (next && next.kind !== "dataurl") {
+            objectUrl = next.url;
+          }
+          return next;
+        });
+      });
+    };
+    refresh();
+    // Settings bumps the meta string, so storage events cover same tab
+    // and cross tab alike
+    window.addEventListener("storage", refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("storage", refresh);
+      if (objectUrl !== null) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   }, []);
   return wallpaper;
 }
@@ -188,12 +277,16 @@ export function AmbientBackdrop() {
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 hidden overflow-hidden lg:block"
       >
-        <img
-          src={wallpaper}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ opacity: Math.min(k, 1) }}
-        />
+        {wallpaper.kind === "video" ? (
+          <WallpaperVideo src={wallpaper.url} />
+        ) : (
+          <img
+            src={wallpaper.kind === "dataurl" ? wallpaper.src : wallpaper.url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ opacity: Math.min(k, 1) }}
+          />
+        )}
         {/* scrim keeps text over the wallpaper readable */}
         <div className="absolute inset-0 bg-canvas/45" />
         <div

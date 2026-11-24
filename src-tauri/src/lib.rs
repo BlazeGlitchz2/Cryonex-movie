@@ -1,10 +1,18 @@
 mod adblock;
 
 use std::collections::HashSet;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::{Manager, Url};
 
 struct EmbedHosts(Mutex<HashSet<String>>);
+
+// compatibility mode: when on, the navigation guard lets embedded players
+// load from any http(s) host. Some sources chain their real player through
+// nested iframes on hosts no allowlist can predict, and blocking those
+// hosts is what made several servers refuse to play no matter what the
+// frontend toggled.
+struct CompatFlag(AtomicBool);
 
 fn is_app_url(url: &Url) -> bool {
   match url.scheme() {
@@ -48,6 +56,11 @@ fn base_embed_hosts() -> HashSet<String> {
 #[tauri::command]
 fn set_embed_hosts(hosts: Vec<String>, state: tauri::State<EmbedHosts>) {
   *state.0.lock().unwrap() = hosts.into_iter().collect();
+}
+
+#[tauri::command]
+fn set_compat_mode(enabled: bool, state: tauri::State<CompatFlag>) {
+  state.0.store(enabled, Ordering::SeqCst);
 }
 
 // Every deep-link navigation lands here, so Nova can verify (and audit) where the app actually went.
@@ -123,10 +136,12 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_deep_link::init())
     .manage(EmbedHosts(Mutex::new(base_embed_hosts())))
+    .manage(CompatFlag(AtomicBool::new(false)))
     .invoke_handler(tauri::generate_handler![
       set_embed_hosts,
       log_nav,
-      set_adblock
+      set_adblock,
+      set_compat_mode
     ])
     .setup(|app| {
       if cfg!(debug_assertions) {
@@ -149,9 +164,18 @@ pub fn run() {
       let handle = app.handle().clone();
       let window = tauri::WebviewWindowBuilder::from_config(app.handle(), config)?
         // wry fires this for every frame load, iframes included: allow app
-        // pages plus the synced embed host list, cancel everything else
+        // pages plus the synced embed host list, cancel everything else.
+        // Compatibility mode relaxes it to any http(s) host so nested
+        // player iframes survive; popups stay denied either way.
         .on_navigation(move |url| {
-          is_app_url(url)
+          let compat = handle
+            .state::<CompatFlag>()
+            .0
+            .load(Ordering::SeqCst);
+          if compat {
+            return matches!(url.scheme(), "http" | "https") || is_app_url(&url);
+          }
+          is_app_url(&url)
             || handle
               .state::<EmbedHosts>()
               .0

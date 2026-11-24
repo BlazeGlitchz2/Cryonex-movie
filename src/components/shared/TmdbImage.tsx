@@ -51,7 +51,9 @@ export function TmdbImage({
       return;
     }
     // native lazy loading leaves images inside nested scrollers blank in
-    // WebKit, so the viewport observer decides instead
+    // WebKit, so the viewport observer decides instead. The horizontal
+    // margin is deliberately huge: poster rows are 2000px+ wide and the
+    // owner must not hover a card to coax its art into existence.
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
@@ -59,7 +61,7 @@ export function TmdbImage({
           observer.disconnect();
         }
       },
-      { rootMargin: "600px 400px" },
+      { rootMargin: "600px 2400px" },
     );
     observer.observe(node);
     // safety net: if the observer never fires (edge cases inside nested

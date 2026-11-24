@@ -190,10 +190,17 @@ through a 0.5x to 1.8x multiplier. "custom" renders the JPEG data URL
 stored under `cryonex-wallpaper` (Settings downscales to 1600px; the
 backdrop listens for storage events). The Settings page owns the
 picker, intensity slider and image upload; Sources modal never shows
-appearance. `compatibilityMode: boolean` (default false): App.tsx
-invokes the `set_adblock` Tauri command with `!compatibilityMode` on
-every change, and WatchPage drops the theater sandbox entirely while
-it is on. Honest copy in Settings names the tradeoff (ads possible).
+appearance. "custom" accepts stills (downscaled 1600px data URL) and
+animated art (video/GIF up to 40 MB as an IndexedDB Blob via
+`src/services/wallpaperStore.ts`, metadata JSON in the key; the
+backdrop refreshes on storage events). `compatibilityMode: boolean`
+(default false): App.tsx invokes `set_adblock` with
+`!compatibilityMode` AND `set_compat_mode` with the flag. In Rust the
+flag relaxes the `on_navigation` host allowlist to any http(s) host,
+because some sources chain their real player through nested iframes
+on unpredictable hosts; popups stay denied. WatchPage drops the
+theater sandbox while it is on. Honest copy in Settings names the
+tradeoff (ads possible).
 
 ### Button grammar
 
